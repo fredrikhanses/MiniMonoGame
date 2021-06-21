@@ -8,9 +8,9 @@ namespace MiniMonoGame
         public float speed;
         public int move;
 
-        public void Init(Vector2 position, Vector2 scale, float speed)
+        public void Init(Vector2 position, Vector2 scale, float rotation = 0.0f, float speed = 50.0f)
         {
-            InitEntity(position, scale);
+            InitEntity(position, scale, rotation);
             this.speed = speed;
             move = -1;
         }
