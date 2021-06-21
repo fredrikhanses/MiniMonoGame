@@ -3,7 +3,7 @@ using System;
 
 namespace MiniMonoGame
 {
-    public class Enemy : Entity
+    class Planet : Entity
     {
         public float speed;
         public bool move;
@@ -30,7 +30,7 @@ namespace MiniMonoGame
         {
             UpdateEntity(deltaTime);
 
-            // Enemy movement
+            // Planet movement
             if (!move)
             {
                 Random random = new Random();
