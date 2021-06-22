@@ -11,8 +11,12 @@ namespace MiniMonoGame
         public float movementTolerance;
         public float rotationDestination;
         public bool move;
+        public bool shoot;
+        public bool stopShoot;
+        public bool dead;
         public float rotationAlpha;
         public Vector2 destination;
+        public Vector2 shootDirection;
         public Vector2 forwardDirection;
         public Vector2 rightDirection;
 
@@ -23,6 +27,7 @@ namespace MiniMonoGame
             this.rotationSpeed = rotationSpeed;
             this.movementTolerance = movementTolerance;
             move = false;
+            dead = false;
             forwardDirection = new Vector2(0.0f, -1.0f);
             rightDirection = new Vector2(1.0f, 0.0f);
         }
@@ -148,6 +153,19 @@ namespace MiniMonoGame
             {
                 position.Y = texture.Height / 2;
                 move = false;
+            }
+
+            //Shoot bullet
+            if (mouseState.LeftButton == ButtonState.Pressed)
+            {
+                shootDirection = mouseState.Position.ToVector2() - position;
+                shootDirection.Normalize();
+                shoot = true;
+            }
+            if (keyboardState.IsKeyDown(Keys.Space))
+            {
+                shootDirection = forwardDirection;
+                shoot = true;
             }
         }
     }

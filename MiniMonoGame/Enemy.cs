@@ -7,6 +7,7 @@ namespace MiniMonoGame
     {
         public float speed;
         public bool move;
+        public bool dead;
         public float rotationSpeed;
         public float movementTolerance;
         public float rotationDestination;
@@ -22,13 +23,22 @@ namespace MiniMonoGame
             this.movementTolerance = movementTolerance;
             this.rotationSpeed = rotationSpeed;
             move = false;
+            dead = false;
             forwardDirection = new Vector2(0.0f, -1.0f);
             rightDirection = new Vector2(1.0f, 0.0f);
         }
 
-        public void Update(float deltaTime, int screenWidth, int screenHeight)
+        public void Update(float deltaTime, int screenWidth, int screenHeight, Player player)
         {
             UpdateEntity(deltaTime);
+
+            if (dead)
+            {
+                move = false;
+                position = new Vector2(screenWidth * 0.5f, texture.Height);
+                dead = false;
+                return;
+            }
 
             // Enemy movement
             if (!move)
@@ -75,6 +85,13 @@ namespace MiniMonoGame
                 {
                     position = destination;
                     move = false;
+                }
+
+                //Enemy-Player Collision
+                Rectangle playerBounds = new Rectangle((player.position - player.texture.Bounds.Size.ToVector2() * player.scale * 0.5f).ToPoint(), (player.texture.Bounds.Size.ToVector2() * player.scale).ToPoint());
+                if (playerBounds.Intersects(new Rectangle((position - texture.Bounds.Size.ToVector2() * scale * 0.5f).ToPoint(), (texture.Bounds.Size.ToVector2() * scale).ToPoint())))
+                {
+                    player.dead = true;
                 }
             }
         }
