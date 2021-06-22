@@ -1,5 +1,4 @@
 ﻿using Microsoft.Xna.Framework;
-using System.Collections.Generic;
 
 namespace MiniMonoGame
 {
@@ -15,7 +14,7 @@ namespace MiniMonoGame
             move = false;
         }
 
-        public void Update(float deltaTime, int screenWidth, int screenHeight, bool shoot, out bool stopShoot, Vector2 initPosition, Vector2 initDirecton, List<Enemy> enemies)
+        public void Update(float deltaTime, int screenWidth, int screenHeight, bool shoot, out bool stopShoot, Vector2 initPosition, Vector2 initDirecton, Enemy[] enemies = null, Player player = null)
         {
             UpdateEntity(deltaTime);
 
@@ -35,18 +34,32 @@ namespace MiniMonoGame
             {
                 position.Y += speed * deltaTime * direction.Y;
                 position.X += speed * deltaTime * direction.X;
-                foreach (Enemy enemy in enemies)
+                if (enemies != null)
                 {
-                    Rectangle enemyBounds = new Rectangle((enemy.position - enemy.texture.Bounds.Size.ToVector2() * enemy.scale * 0.5f).ToPoint(), (enemy.texture.Bounds.Size.ToVector2() * enemy.scale).ToPoint());
-                    if (enemyBounds.Intersects(new Rectangle((position - texture.Bounds.Size.ToVector2() * scale * 0.5f).ToPoint(), (texture.Bounds.Size.ToVector2() * scale).ToPoint())))
+                    foreach (Enemy enemy in enemies)
                     {
-                        move = false;
-                        enemy.dead = true;
+                        Rectangle enemyBounds = new Rectangle((enemy.position - enemy.texture.Bounds.Size.ToVector2() * enemy.scale * 0.5f).ToPoint(), (enemy.texture.Bounds.Size.ToVector2() * enemy.scale).ToPoint());
+                        if (enemyBounds.Intersects(new Rectangle((position - texture.Bounds.Size.ToVector2() * scale * 0.5f).ToPoint(), (texture.Bounds.Size.ToVector2() * scale).ToPoint())))
+                        {
+                            move = false;
+                            enemy.dead = true;
+                        }
                     }
                 }
-                if (position.X > screenWidth - (texture.Width / 2) * scale.X ||
-                    position.Y > screenHeight - (texture.Height / 2) * scale.Y ||
-                    position.X < (texture.Width / 2) * scale.X || position.Y < (texture.Height / 2) * scale.Y)
+
+                if (player != null)
+                {
+                    Rectangle playerBounds = new Rectangle((player.position - player.texture.Bounds.Size.ToVector2() * player.scale * 0.5f).ToPoint(), (player.texture.Bounds.Size.ToVector2() * player.scale).ToPoint());
+                    if (playerBounds.Intersects(new Rectangle((position - texture.Bounds.Size.ToVector2() * scale * 0.5f).ToPoint(), (texture.Bounds.Size.ToVector2() * scale).ToPoint())))
+                    {
+                        move = false;
+                        player.dead = true;
+                    }
+                }
+
+                if (position.X > screenWidth - (texture.Width * 0.5f) * scale.X ||
+                    position.Y > screenHeight - (texture.Height * 0.5f) * scale.Y ||
+                    position.X < (texture.Width * 0.5f) * scale.X || position.Y < (texture.Height * 0.5f) * scale.Y)
                 {
                     move = false;
                 }

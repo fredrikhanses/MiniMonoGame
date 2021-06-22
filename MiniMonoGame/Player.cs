@@ -89,7 +89,6 @@ namespace MiniMonoGame
             GamePadState gamePadState = GamePad.GetState(PlayerIndex.One);
             if (keyboardState.IsKeyDown(Keys.Up) || keyboardState.IsKeyDown(Keys.W) || gamePadState.ThumbSticks.Right.Y > 0.0f)
             {
-
                 position += speed * deltaTime * forwardDirection;
                 move = false;
             }
@@ -134,24 +133,24 @@ namespace MiniMonoGame
                 forwardDirection.Normalize();
             }
 
-            if (position.X > screenWidth - texture.Width / 2)
+            if (position.X > screenWidth - texture.Width * 0.5f)
             {
-                position.X = screenWidth - texture.Width / 2;
+                position.X = screenWidth - texture.Width * 0.5f;
                 move = false;
             }
-            else if (position.X < texture.Width / 2)
+            else if (position.X < texture.Width * 0.5f)
             {
-                position.X = texture.Width / 2;
+                position.X = texture.Width * 0.5f;
                 move = false;
             }
-            if (position.Y > screenHeight - texture.Height / 2)
+            if (position.Y > screenHeight - texture.Height * 0.5f)
             {
-                position.Y = screenHeight - texture.Height / 2;
+                position.Y = screenHeight - texture.Height * 0.5f;
                 move = false;
             }
-            else if (position.Y < texture.Height / 2)
+            else if (position.Y < texture.Height * 0.5f)
             {
-                position.Y = texture.Height / 2;
+                position.Y = texture.Height * 0.5f;
                 move = false;
             }
 

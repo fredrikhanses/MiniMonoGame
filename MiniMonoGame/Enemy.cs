@@ -8,15 +8,19 @@ namespace MiniMonoGame
         public float speed;
         public bool move;
         public bool dead;
+        public bool chasingPlayer;
+        public bool stopShoot;
         public float rotationSpeed;
         public float movementTolerance;
         public float rotationDestination;
         public float rotationAlpha;
+        private float chaseRadiusSquared;
         public Vector2 destination;
         public Vector2 forwardDirection;
         public Vector2 rightDirection;
+        public Bullet[] bullets;
 
-        public void Init(Vector2 position, Vector2 scale, float rotation = 0.0f, float speed = 100.0f, float rotationSpeed = 1.0f, float movementTolerance = 1.0f)
+        public void Init(Vector2 position, Vector2 scale, float rotation = 0.0f, float speed = 100.0f, float chaseRadius = 450.0f, float rotationSpeed = 1.0f, float movementTolerance = 1.0f, int numberOfBullets = 5)
         {
             InitEntity(position, scale, rotation);
             this.speed = speed;
@@ -24,8 +28,17 @@ namespace MiniMonoGame
             this.rotationSpeed = rotationSpeed;
             move = false;
             dead = false;
+            chasingPlayer = false;
+            chaseRadiusSquared = chaseRadius * chaseRadius;
             forwardDirection = new Vector2(0.0f, -1.0f);
             rightDirection = new Vector2(1.0f, 0.0f);
+            bullets = new Bullet[numberOfBullets];
+            for (int i = 0; i < numberOfBullets; i++)
+            {
+                Bullet bullet = new Bullet();
+                bullet.Init(position, new Vector2(0.2f, 0.2f), 0.0f, 400.0f);
+                bullets[i] = bullet;
+            }
         }
 
         public void Update(float deltaTime, int screenWidth, int screenHeight, Player player)
@@ -41,6 +54,16 @@ namespace MiniMonoGame
             }
 
             // Enemy movement
+            if ((player.position - position).LengthSquared() < chaseRadiusSquared)
+            {
+                destination = player.position;
+                direction = position - destination;
+                direction.Normalize();
+                rotationDestination = (float)Math.Atan2(direction.Y * -forwardDirection.X - direction.X * -forwardDirection.Y, direction.X * -forwardDirection.X + direction.Y * -forwardDirection.Y);
+                move = true;
+                chasingPlayer = true;
+                rotationAlpha = 0.0f;
+            }
             if (!move)
             {
                 Random random = new Random();
@@ -93,6 +116,11 @@ namespace MiniMonoGame
                 {
                     player.dead = true;
                 }
+            }
+
+            foreach (Bullet bullet in bullets)
+            {
+                bullet.Update(deltaTime, screenWidth, screenHeight, chasingPlayer, out stopShoot, position, forwardDirection, null, player);
             }
         }
     }
