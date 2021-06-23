@@ -46,11 +46,26 @@ namespace MiniMonoGame
                 {
                     foreach (Enemy enemy in enemies)
                     {
-                        Rectangle enemyBounds = new Rectangle((enemy.position - enemy.texture.Bounds.Size.ToVector2() * enemy.scale * 0.5f).ToPoint(), (enemy.texture.Bounds.Size.ToVector2() * enemy.scale).ToPoint());
-                        if (enemyBounds.Intersects(new Rectangle((position - texture.Bounds.Size.ToVector2() * scale * 0.5f).ToPoint(), (texture.Bounds.Size.ToVector2() * scale).ToPoint())))
+                        if (!enemy.dead)
                         {
-                            move = false;
-                            enemy.dead = true;
+                            Rectangle enemyBounds = new Rectangle((enemy.position - enemy.texture.Bounds.Size.ToVector2() * enemy.scale * 0.5f).ToPoint(), (enemy.texture.Bounds.Size.ToVector2() * enemy.scale).ToPoint());
+                            if (enemyBounds.Intersects(new Rectangle((position - texture.Bounds.Size.ToVector2() * scale * 0.5f).ToPoint(), (texture.Bounds.Size.ToVector2() * scale).ToPoint())))
+                            {
+                                move = false;
+                                enemy.dead = true;
+                            }
+                        }
+                        foreach (Bullet bullet in enemy.bullets)
+                        {
+                            if (bullet.move)
+                            {
+                                Rectangle enemyBulletBounds = new Rectangle((bullet.position - bullet.texture.Bounds.Size.ToVector2() * bullet.scale * 0.5f).ToPoint(), (enemy.texture.Bounds.Size.ToVector2() * bullet.scale).ToPoint());
+                                if (enemyBulletBounds.Intersects(new Rectangle((position - texture.Bounds.Size.ToVector2() * scale * 0.5f).ToPoint(), (texture.Bounds.Size.ToVector2() * scale).ToPoint())))
+                                {
+                                    move = false;
+                                    bullet.move = false;
+                                }
+                            }
                         }
                     }
                 }
