@@ -23,6 +23,7 @@ namespace MiniMonoGame
         private Player player;
         private int screenWidth;
         private int screenHeight;
+        private bool increaseScore;
 
         public void Init(Vector2 position, Vector2 scale, Player player, int screenWidth, int screenHeight, float rotation = 0.0f, float speed = 100.0f, float chaseRadius = 450.0f, float rotationSpeed = 1.0f, float movementTolerance = 1.0f, int numberOfBullets = 5)
         {
@@ -61,11 +62,18 @@ namespace MiniMonoGame
         {
             UpdateEntity(deltaTime);
 
+            foreach (Bullet bullet in bullets)
+            {
+                bullet.Update(deltaTime, chasingPlayer, out stopShoot, position, forwardDirection, out increaseScore);
+                if (stopShoot)
+                {
+                    chasingPlayer = false;
+                }
+            }
+
             if (dead)
             {
-                move = false;
                 position = new Vector2(screenWidth * 0.5f, texture.Height);
-                dead = false;
                 return;
             }
 
@@ -133,15 +141,6 @@ namespace MiniMonoGame
                     player.dead = true;
                 }
             }
-
-            foreach (Bullet bullet in bullets)
-            {
-                bullet.Update(deltaTime, chasingPlayer, out stopShoot, position, forwardDirection);
-                if (stopShoot)
-                {
-                    chasingPlayer = false;
-                }
-            }
         }
 
         public void Draw(SpriteBatch spriteBatch)
@@ -152,6 +151,13 @@ namespace MiniMonoGame
             {
                 bullet.Draw(spriteBatch);
             }
+        }
+
+        public void Respawn()
+        {
+            move = false;
+            position = new Vector2(screenWidth * 0.5f, texture.Height);
+            dead = false;
         }
     }
 }

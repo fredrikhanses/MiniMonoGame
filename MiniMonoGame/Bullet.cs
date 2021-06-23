@@ -22,10 +22,10 @@ namespace MiniMonoGame
             move = false;
         }
 
-        public void Update(float deltaTime, bool shoot, out bool stopShoot, Vector2 initPosition, Vector2 initDirecton)
+        public void Update(float deltaTime, bool shoot, out bool stopShoot, Vector2 initPosition, Vector2 initDirecton, out bool increaseScore)
         {
             UpdateEntity(deltaTime);
-
+            increaseScore = false;
             // Shoot Bullet
             if (shoot && !move)
             {
@@ -53,6 +53,10 @@ namespace MiniMonoGame
                             {
                                 move = false;
                                 enemy.dead = true;
+                                enemy.move = false;
+                                enemy.chasingPlayer = false;
+                                enemy.stopShoot = true;
+                                increaseScore = true;
                             }
                         }
                     }

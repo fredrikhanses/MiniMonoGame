@@ -23,6 +23,9 @@ namespace MiniMonoGame
         public Bullet[] bullets;
         private int screenWidth;
         private int screenHeight;
+        public int score;
+        private bool increaseScore;
+
         public void Init(Vector2 position, Vector2 scale, int screenWidth, int screenHeight, float rotation = 0.0f, float speed = 100.0f, float rotationSpeed = 1.0f, float movementTolerance = 1.0f, int numberOfBullets = 100, Enemy[] enemies = null)
         {
             InitEntity(position, scale, rotation);
@@ -33,6 +36,8 @@ namespace MiniMonoGame
             this.screenHeight = screenHeight;
             move = false;
             dead = false;
+            score = 0;
+            increaseScore = false;
             forwardDirection = new Vector2(0.0f, -1.0f);
             rightDirection = new Vector2(1.0f, 0.0f);
             bullets = new Bullet[numberOfBullets];
@@ -171,10 +176,14 @@ namespace MiniMonoGame
 
             foreach (Bullet bullet in bullets)
             {
-                bullet.Update(deltaTime, shoot, out stopShoot, position, shootDirection);
+                bullet.Update(deltaTime, shoot, out stopShoot, position, shootDirection, out increaseScore);
                 if (stopShoot)
                 {
                     shoot = false;
+                }
+                if (increaseScore)
+                {
+                    score++;
                 }
             }
         }

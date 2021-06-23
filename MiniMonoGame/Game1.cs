@@ -17,12 +17,14 @@ namespace MiniMonoGame
         private readonly GraphicsDeviceManager graphics;
         private SpriteBatch spriteBatch;
         private SpriteFont spriteFont;
-        private const string paused = "Paused";
+        private const string pausedText = "Paused";
         private Vector2 pauseFontSize;
-        private const string dead = "You Died";
+        private const string deadText = "You Died";
         private Vector2 deadFontSize;
-        private const string respawn = "Press R to Respawn";
+        private const string respawnText = "Press R to Respawn";
         private Vector2 respawnFontSize;
+        private const string scoreText = "Score: ";
+        private Vector2 scoreFontSize;
 
         public Game1()
         {
@@ -35,6 +37,7 @@ namespace MiniMonoGame
             graphics.SynchronizeWithVerticalRetrace = false;
             Content.RootDirectory = "Content";
             IsMouseVisible = true;
+
             player = new Player();
 
             enemies = new Enemy[numberOfEnemies];
@@ -101,9 +104,10 @@ namespace MiniMonoGame
             MediaPlayer.IsRepeating = true;
 
             spriteFont = Content.Load<SpriteFont>("Pause");
-            pauseFontSize = spriteFont.MeasureString(paused);
-            deadFontSize = spriteFont.MeasureString(dead);
-            respawnFontSize = spriteFont.MeasureString(respawn);
+            pauseFontSize = spriteFont.MeasureString(pausedText);
+            deadFontSize = spriteFont.MeasureString(deadText);
+            respawnFontSize = spriteFont.MeasureString(respawnText);
+            scoreFontSize = spriteFont.MeasureString(scoreText);
         }
 
         protected override void Update(GameTime gameTime)
@@ -120,6 +124,7 @@ namespace MiniMonoGame
                 {
                     player.position = new Vector2(graphics.PreferredBackBufferWidth * 0.5f, graphics.PreferredBackBufferHeight * 0.5f);
                     player.dead = false;
+                    player.score = 0;
                 }
                 else
                 {
@@ -132,9 +137,21 @@ namespace MiniMonoGame
                 player.Update((float)gameTime.ElapsedGameTime.TotalSeconds);
             }
 
+            bool aliveEnemies = false;
             foreach (Enemy enemy in enemies)
             {
+                if (!enemy.dead)
+                {
+                    aliveEnemies = true;
+                }
                 enemy.Update((float)gameTime.ElapsedGameTime.TotalSeconds);
+            }
+            if (!aliveEnemies)
+            {
+                foreach (Enemy enemy in enemies)
+                {
+                    enemy.Respawn();
+                }
             }
 
             foreach (Planet planet in planets)
@@ -160,10 +177,22 @@ namespace MiniMonoGame
             
             foreach (Enemy enemy in enemies)
             {
-                enemy.Draw(spriteBatch);
+                if (!enemy.dead)
+                {
+                    enemy.Draw(spriteBatch);
+                }
+                else
+                {
+                    foreach (Bullet bullet in enemy.bullets)
+                    {
+                        bullet.Draw(spriteBatch);
+                    }
+                }
             }
 
             player.Draw(spriteBatch);
+
+            DrawScoreText();
 
             if (player.dead)
             {
@@ -191,17 +220,22 @@ namespace MiniMonoGame
 
         private void DrawPauseText()
         {
-            spriteBatch.DrawString(spriteFont, paused, new Vector2(graphics.PreferredBackBufferWidth * 0.5f - pauseFontSize.X * 0.5f, graphics.PreferredBackBufferHeight * 0.25f - pauseFontSize.Y * 0.5f), Color.Red);
+            spriteBatch.DrawString(spriteFont, pausedText, new Vector2(graphics.PreferredBackBufferWidth * 0.5f - pauseFontSize.X * 0.5f, graphics.PreferredBackBufferHeight * 0.25f - pauseFontSize.Y * 0.5f), Color.Red);
         }
 
         private void DrawDeadText()
         {
-            spriteBatch.DrawString(spriteFont, dead, new Vector2(graphics.PreferredBackBufferWidth * 0.5f - deadFontSize.X * 0.5f, graphics.PreferredBackBufferHeight * 0.5f - deadFontSize.Y * 0.5f), Color.Red);
+            spriteBatch.DrawString(spriteFont, deadText, new Vector2(graphics.PreferredBackBufferWidth * 0.5f - deadFontSize.X * 0.5f, graphics.PreferredBackBufferHeight * 0.5f - deadFontSize.Y * 0.5f), Color.Red);
         }
 
         private void DrawRespawnText()
         {
-            spriteBatch.DrawString(spriteFont, respawn, new Vector2(graphics.PreferredBackBufferWidth * 0.5f - respawnFontSize.X * 0.5f, graphics.PreferredBackBufferHeight * 0.75f - respawnFontSize.Y * 0.5f), Color.Red);
+            spriteBatch.DrawString(spriteFont, respawnText, new Vector2(graphics.PreferredBackBufferWidth * 0.5f - respawnFontSize.X * 0.5f, graphics.PreferredBackBufferHeight * 0.75f - respawnFontSize.Y * 0.5f), Color.Red);
+        }
+
+        private void DrawScoreText()
+        {
+            spriteBatch.DrawString(spriteFont, scoreText + player.score, new Vector2(graphics.PreferredBackBufferWidth * 0.1f - scoreFontSize.X * 0.5f, graphics.PreferredBackBufferHeight * 0.1f - scoreFontSize.Y * 0.5f), Color.Red);
         }
     }
 }
