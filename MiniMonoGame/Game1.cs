@@ -8,14 +8,21 @@ namespace MiniMonoGame
 {
     public class Game1 : Game
     {
-        private static readonly int numberOfEnemies = 100;
-        private static readonly int numberOfPlanets = 2;
+        private const int numberOfEnemies = 100;
+        private const int numberOfPlanets = 2;
         private readonly Player player;
         private readonly Enemy[] enemies;
         private readonly Planet[] planets;
         private Texture2D portal;
         private readonly GraphicsDeviceManager graphics;
         private SpriteBatch spriteBatch;
+        private SpriteFont spriteFont;
+        private const string paused = "Paused";
+        private Vector2 pauseFontSize;
+        private const string dead = "You Died";
+        private Vector2 deadFontSize;
+        private const string respawn = "Press R to Respawn";
+        private Vector2 respawnFontSize;
 
         public Game1()
         {
@@ -92,6 +99,11 @@ namespace MiniMonoGame
             Song song = Content.Load<Song>("sci-fi_theme");
             MediaPlayer.Play(song);
             MediaPlayer.IsRepeating = true;
+
+            spriteFont = Content.Load<SpriteFont>("Pause");
+            pauseFontSize = spriteFont.MeasureString(paused);
+            deadFontSize = spriteFont.MeasureString(dead);
+            respawnFontSize = spriteFont.MeasureString(respawn);
         }
 
         protected override void Update(GameTime gameTime)
@@ -153,6 +165,13 @@ namespace MiniMonoGame
 
             player.Draw(spriteBatch);
 
+            if (player.dead)
+            {
+                DrawPauseText();
+                DrawDeadText();
+                DrawRespawnText();
+            }
+
             spriteBatch.End();
 
             base.Draw(gameTime);
@@ -168,6 +187,21 @@ namespace MiniMonoGame
             }
             rect.SetData(data);
             spriteBatch.Draw(rect, entity.position - entity.texture.Bounds.Size.ToVector2() * 0.5f, null, Color.White, 0.0f, Vector2.Zero, Vector2.One, SpriteEffects.None, 0.0f);
+        }
+
+        private void DrawPauseText()
+        {
+            spriteBatch.DrawString(spriteFont, paused, new Vector2(graphics.PreferredBackBufferWidth * 0.5f - pauseFontSize.X * 0.5f, graphics.PreferredBackBufferHeight * 0.25f - pauseFontSize.Y * 0.5f), Color.Red);
+        }
+
+        private void DrawDeadText()
+        {
+            spriteBatch.DrawString(spriteFont, dead, new Vector2(graphics.PreferredBackBufferWidth * 0.5f - deadFontSize.X * 0.5f, graphics.PreferredBackBufferHeight * 0.5f - deadFontSize.Y * 0.5f), Color.Red);
+        }
+
+        private void DrawRespawnText()
+        {
+            spriteBatch.DrawString(spriteFont, respawn, new Vector2(graphics.PreferredBackBufferWidth * 0.5f - respawnFontSize.X * 0.5f, graphics.PreferredBackBufferHeight * 0.75f - respawnFontSize.Y * 0.5f), Color.Red);
         }
     }
 }

@@ -20,7 +20,7 @@ namespace MiniMonoGame
         public Vector2 shootDirection;
         public Vector2 forwardDirection;
         public Vector2 rightDirection;
-        private Bullet[] bullets;
+        public Bullet[] bullets;
         private int screenWidth;
         private int screenHeight;
         public void Init(Vector2 position, Vector2 scale, int screenWidth, int screenHeight, float rotation = 0.0f, float speed = 100.0f, float rotationSpeed = 1.0f, float movementTolerance = 1.0f, int numberOfBullets = 100, Enemy[] enemies = null)

@@ -55,18 +55,6 @@ namespace MiniMonoGame
                                 enemy.dead = true;
                             }
                         }
-                        foreach (Bullet bullet in enemy.bullets)
-                        {
-                            if (bullet.move)
-                            {
-                                Rectangle enemyBulletBounds = new Rectangle((bullet.position - bullet.texture.Bounds.Size.ToVector2() * bullet.scale * 0.5f).ToPoint(), (enemy.texture.Bounds.Size.ToVector2() * bullet.scale).ToPoint());
-                                if (enemyBulletBounds.Intersects(new Rectangle((position - texture.Bounds.Size.ToVector2() * scale * 0.5f).ToPoint(), (texture.Bounds.Size.ToVector2() * scale).ToPoint())))
-                                {
-                                    move = false;
-                                    bullet.move = false;
-                                }
-                            }
-                        }
                     }
                 }
 
@@ -77,6 +65,18 @@ namespace MiniMonoGame
                     {
                         move = false;
                         player.dead = true;
+                    }
+                    foreach (Bullet bullet in player.bullets)
+                    {
+                        if (bullet.move)
+                        {
+                            Rectangle playerBulletBounds = new Rectangle((bullet.position - bullet.texture.Bounds.Size.ToVector2() * bullet.scale * 0.5f).ToPoint(), (bullet.texture.Bounds.Size.ToVector2() * bullet.scale).ToPoint());
+                            if (playerBulletBounds.Intersects(new Rectangle((position - texture.Bounds.Size.ToVector2() * scale * 0.5f).ToPoint(), (texture.Bounds.Size.ToVector2() * scale).ToPoint())))
+                            {
+                                move = false;
+                                bullet.move = false;
+                            }
+                        }
                     }
                 }
 

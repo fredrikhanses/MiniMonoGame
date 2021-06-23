@@ -70,7 +70,7 @@ namespace MiniMonoGame
             }
 
             // Enemy movement
-            if ((player.position - position).LengthSquared() < chaseRadiusSquared)
+            if ((player.position - position).LengthSquared() < chaseRadiusSquared && player.position != position)
             {
                 destination = player.position;
                 direction = position - destination;
