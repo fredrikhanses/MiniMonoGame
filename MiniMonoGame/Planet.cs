@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 
 namespace MiniMonoGame
@@ -14,19 +15,28 @@ namespace MiniMonoGame
         public Vector2 destination;
         public Vector2 forwardDirection;
         public Vector2 rightDirection;
-
-        public void Init(Vector2 position, Vector2 scale, float rotation = 0.0f, float speed = 100.0f, float rotationSpeed = 1.0f, float movementTolerance = 1.0f)
+        public string texturePath;
+        private int screenWidth;
+        private int screenHeight;
+        public void Init(Vector2 position, Vector2 scale, int screenWidth, int screenHeight, float rotation = 0.0f, float speed = 100.0f, float rotationSpeed = 1.0f, float movementTolerance = 1.0f)
         {
             InitEntity(position, scale, rotation);
             this.speed = speed;
             this.movementTolerance = movementTolerance;
             this.rotationSpeed = rotationSpeed;
+            this.screenWidth = screenWidth;
+            this.screenHeight = screenHeight;
             move = false;
             forwardDirection = new Vector2(0.0f, -1.0f);
             rightDirection = new Vector2(1.0f, 0.0f);
         }
 
-        public void Update(float deltaTime, int screenWidth, int screenHeight)
+        public void LoadContent(Texture2D texture)
+        {
+            this.texture = texture;
+        }
+
+        public void Update(float deltaTime)
         {
             UpdateEntity(deltaTime);
 
@@ -77,6 +87,11 @@ namespace MiniMonoGame
                     move = false;
                 }
             }
+        }
+
+        public void Draw(SpriteBatch spriteBatch)
+        {
+            spriteBatch.Draw(texture, position, null, Color.White, rotation, new Vector2(texture.Width * 0.5f, texture.Height * 0.5f), scale, SpriteEffects.None, 0.0f);
         }
     }
 }

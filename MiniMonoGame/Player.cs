@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 
@@ -19,26 +20,46 @@ namespace MiniMonoGame
         public Vector2 shootDirection;
         public Vector2 forwardDirection;
         public Vector2 rightDirection;
-
-        public void Init(Vector2 position, Vector2 scale, float rotation = 0.0f, float speed = 100.0f, float rotationSpeed = 1.0f, float movementTolerance = 1.0f)
+        private Bullet[] bullets;
+        private int screenWidth;
+        private int screenHeight;
+        public void Init(Vector2 position, Vector2 scale, int screenWidth, int screenHeight, float rotation = 0.0f, float speed = 100.0f, float rotationSpeed = 1.0f, float movementTolerance = 1.0f, int numberOfBullets = 100, Enemy[] enemies = null)
         {
             InitEntity(position, scale, rotation);
             this.speed = speed;
             this.rotationSpeed = rotationSpeed;
             this.movementTolerance = movementTolerance;
+            this.screenWidth = screenWidth;
+            this.screenHeight = screenHeight;
             move = false;
             dead = false;
             forwardDirection = new Vector2(0.0f, -1.0f);
             rightDirection = new Vector2(1.0f, 0.0f);
+            bullets = new Bullet[numberOfBullets];
+            for (int i = 0; i < numberOfBullets; i++)
+            {
+                Bullet bullet = new Bullet();
+                bullet.Init(position, new Vector2(0.2f, 0.2f), screenWidth, screenHeight, 0.0f, 600.0f, enemies);
+                bullets[i] = bullet;
+            }
         }
 
-        public void Update(float deltaTime, int screenWidth, int screenHeight)
+        public void LoadContent(Texture2D playerTexture, Texture2D bulletTexture)
+        {
+            texture = playerTexture;
+            foreach (Bullet bullet in bullets)
+            {
+                bullet.texture = bulletTexture;
+            }
+        }
+
+        public void Update(float deltaTime)
         {
             UpdateEntity(deltaTime);
 
             // Mouse Player movement
             MouseState mouseState = Mouse.GetState();
-            if (mouseState.RightButton == ButtonState.Pressed && mouseState.Position.ToVector2() != position)// && !move)
+            if (mouseState.RightButton == ButtonState.Pressed && mouseState.Position.ToVector2() != position)
             {
                 destination = mouseState.Position.ToVector2();
                 direction = position - destination;
@@ -133,6 +154,43 @@ namespace MiniMonoGame
                 forwardDirection.Normalize();
             }
 
+            RestrictToScreen();
+
+            //Shoot bullet
+            if (mouseState.LeftButton == ButtonState.Pressed)
+            {
+                shootDirection = mouseState.Position.ToVector2() - position;
+                shootDirection.Normalize();
+                shoot = true;
+            }
+            if (keyboardState.IsKeyDown(Keys.Space))
+            {
+                shootDirection = forwardDirection;
+                shoot = true;
+            }
+
+            foreach (Bullet bullet in bullets)
+            {
+                bullet.Update(deltaTime, shoot, out stopShoot, position, shootDirection);
+                if (stopShoot)
+                {
+                    shoot = false;
+                }
+            }
+        }
+
+        public void Draw(SpriteBatch spriteBatch)
+        {
+            spriteBatch.Draw(texture, position, null, Color.White, rotation, new Vector2(texture.Width * 0.5f, texture.Height * 0.5f), scale, SpriteEffects.None, 0.0f);
+
+            foreach (Bullet bullet in bullets)
+            {
+                bullet.Draw(spriteBatch);
+            }
+        }
+
+        private void RestrictToScreen()
+        {
             if (position.X > screenWidth - texture.Width * 0.5f)
             {
                 position.X = screenWidth - texture.Width * 0.5f;
@@ -152,19 +210,6 @@ namespace MiniMonoGame
             {
                 position.Y = texture.Height * 0.5f;
                 move = false;
-            }
-
-            //Shoot bullet
-            if (mouseState.LeftButton == ButtonState.Pressed)
-            {
-                shootDirection = mouseState.Position.ToVector2() - position;
-                shootDirection.Normalize();
-                shoot = true;
-            }
-            if (keyboardState.IsKeyDown(Keys.Space))
-            {
-                shootDirection = forwardDirection;
-                shoot = true;
             }
         }
     }

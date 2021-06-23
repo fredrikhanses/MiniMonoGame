@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 
 namespace MiniMonoGame
@@ -19,13 +20,19 @@ namespace MiniMonoGame
         public Vector2 forwardDirection;
         public Vector2 rightDirection;
         public Bullet[] bullets;
+        private Player player;
+        private int screenWidth;
+        private int screenHeight;
 
-        public void Init(Vector2 position, Vector2 scale, float rotation = 0.0f, float speed = 100.0f, float chaseRadius = 450.0f, float rotationSpeed = 1.0f, float movementTolerance = 1.0f, int numberOfBullets = 5)
+        public void Init(Vector2 position, Vector2 scale, Player player, int screenWidth, int screenHeight, float rotation = 0.0f, float speed = 100.0f, float chaseRadius = 450.0f, float rotationSpeed = 1.0f, float movementTolerance = 1.0f, int numberOfBullets = 5)
         {
             InitEntity(position, scale, rotation);
             this.speed = speed;
             this.movementTolerance = movementTolerance;
             this.rotationSpeed = rotationSpeed;
+            this.player = player;
+            this.screenWidth = screenWidth;
+            this.screenHeight = screenHeight;
             move = false;
             dead = false;
             chasingPlayer = false;
@@ -36,12 +43,21 @@ namespace MiniMonoGame
             for (int i = 0; i < numberOfBullets; i++)
             {
                 Bullet bullet = new Bullet();
-                bullet.Init(position, new Vector2(0.2f, 0.2f), 0.0f, 400.0f);
+                bullet.Init(position, new Vector2(0.2f, 0.2f), screenWidth, screenHeight, 0.0f, 400.0f, null, player);
                 bullets[i] = bullet;
             }
         }
 
-        public void Update(float deltaTime, int screenWidth, int screenHeight, Player player)
+        public void LoadContent(Texture2D enemyTexture, Texture2D bulletTexture)
+        {
+            texture = enemyTexture;
+            foreach (Bullet bullet in bullets)
+            {
+                bullet.texture = bulletTexture;
+            }
+        }
+
+        public void Update(float deltaTime)
         {
             UpdateEntity(deltaTime);
 
@@ -120,7 +136,21 @@ namespace MiniMonoGame
 
             foreach (Bullet bullet in bullets)
             {
-                bullet.Update(deltaTime, screenWidth, screenHeight, chasingPlayer, out stopShoot, position, forwardDirection, null, player);
+                bullet.Update(deltaTime, chasingPlayer, out stopShoot, position, forwardDirection);
+                if (stopShoot)
+                {
+                    chasingPlayer = false;
+                }
+            }
+        }
+
+        public void Draw(SpriteBatch spriteBatch)
+        {
+            spriteBatch.Draw(texture, position, null, Color.White, rotation, new Vector2(texture.Width * 0.5f, texture.Height * 0.5f), scale, SpriteEffects.None, 0.0f);
+
+            foreach (Bullet bullet in bullets)
+            {
+                bullet.Draw(spriteBatch);
             }
         }
     }

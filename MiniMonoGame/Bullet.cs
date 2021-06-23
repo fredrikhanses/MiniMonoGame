@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 
 namespace MiniMonoGame
 {
@@ -6,15 +7,22 @@ namespace MiniMonoGame
     {
         public float speed;
         public bool move;
-
-        public void Init(Vector2 position, Vector2 scale, float rotation = 0.0f, float speed = 400.0f)
+        private Player player;
+        private Enemy[] enemies;
+        private int screenWidth;
+        private int screenHeight;
+        public void Init(Vector2 position, Vector2 scale, int screenWidth, int screenHeight, float rotation = 0.0f, float speed = 400.0f, Enemy[] enemies = null, Player player = null)
         {
             InitEntity(position, scale, rotation);
             this.speed = speed;
+            this.enemies = enemies;
+            this.player = player;
+            this.screenWidth = screenWidth;
+            this.screenHeight = screenHeight;
             move = false;
         }
 
-        public void Update(float deltaTime, int screenWidth, int screenHeight, bool shoot, out bool stopShoot, Vector2 initPosition, Vector2 initDirecton, Enemy[] enemies = null, Player player = null)
+        public void Update(float deltaTime, bool shoot, out bool stopShoot, Vector2 initPosition, Vector2 initDirecton)
         {
             UpdateEntity(deltaTime);
 
@@ -63,6 +71,14 @@ namespace MiniMonoGame
                 {
                     move = false;
                 }
+            }
+        }
+
+        public void Draw(SpriteBatch spriteBatch)
+        {
+            if (move)
+            {
+                spriteBatch.Draw(texture, position, null, Color.White, rotation, new Vector2(texture.Width * 0.5f, texture.Height * 0.5f), scale, SpriteEffects.None, 0.0f);
             }
         }
     }
