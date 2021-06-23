@@ -23,7 +23,7 @@ namespace MiniMonoGame
         private Vector2 deadFontSize;
         private const string respawnText = "Press R to Respawn";
         private Vector2 respawnFontSize;
-        private const string scoreText = "Score: ";
+        private const string scoreText = "Score ";
         private Vector2 scoreFontSize;
 
         public Game1()
