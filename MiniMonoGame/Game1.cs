@@ -86,7 +86,7 @@ namespace MiniMonoGame
             {
                 enemy.Init(new Vector2(graphics.PreferredBackBufferWidth * 0.5f, 32.0f), Vector2.One, player, graphics.PreferredBackBufferWidth, graphics.PreferredBackBufferHeight, 0.0f, 100.0f, 450.0f, 1.0f, 2.0f, 1);
             }
-            boss.InitBoss(new Vector2(graphics.PreferredBackBufferWidth * 0.5f, 32.0f), new Vector2(0.5f, 0.5f), player, graphics.PreferredBackBufferWidth, graphics.PreferredBackBufferHeight, 0.0f, 50.0f, 450.0f, 0.0f, 2.0f, 5, 2);
+            boss.InitBoss(new Vector2(graphics.PreferredBackBufferWidth * 0.5f, 32.0f), new Vector2(0.5f, 0.5f), player, graphics.PreferredBackBufferWidth, graphics.PreferredBackBufferHeight, 0.0f, 50.0f, 450.0f, 0.0f, 2.0f, 0, 1);
 
             Random random = new Random();
             foreach (Planet planet in planets)

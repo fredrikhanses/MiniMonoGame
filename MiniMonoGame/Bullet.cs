@@ -87,18 +87,43 @@ namespace MiniMonoGame
                     }
                 }
 
-                if (boss != null && !boss.dead)
+                if (boss != null)
                 {
-                    Rectangle enemyBounds = new Rectangle((boss.position - boss.texture.Bounds.Size.ToVector2() * boss.scale * 0.5f).ToPoint(), (boss.texture.Bounds.Size.ToVector2() * boss.scale).ToPoint());
-                    if (enemyBounds.Intersects(new Rectangle((position - texture.Bounds.Size.ToVector2() * scale * 0.5f).ToPoint(), (texture.Bounds.Size.ToVector2() * scale).ToPoint())))
+                    if (!boss.dead)
                     {
-                        move = false;
-                        explode = true;
-                        boss.dead = true;
-                        boss.move = false;
-                        boss.chasingPlayer = false;
-                        boss.stopShoot = true;
-                        increaseScore = true;
+                        Rectangle bossBounds = new Rectangle((boss.position - boss.texture.Bounds.Size.ToVector2() * boss.scale * 0.5f).ToPoint(), (boss.texture.Bounds.Size.ToVector2() * boss.scale).ToPoint());
+                        if (bossBounds.Intersects(new Rectangle((position - texture.Bounds.Size.ToVector2() * scale * 0.5f).ToPoint(), (texture.Bounds.Size.ToVector2() * scale).ToPoint())))
+                        {
+                            move = false;
+                            explode = true;
+                            boss.dead = true;
+                            boss.move = false;
+                            boss.chasingPlayer = false;
+                            boss.stopShoot = true;
+                            increaseScore = true;
+                        }
+                    }
+
+                    if (!explode)
+                    {
+                        foreach (Rocket rocket in boss.rockets)
+                        {
+                            if (!rocket.dead)
+                            {
+                                Rectangle rocketBounds = new Rectangle((rocket.position - rocket.texture.Bounds.Size.ToVector2() * rocket.scale * 0.5f).ToPoint(), (rocket.texture.Bounds.Size.ToVector2() * rocket.scale).ToPoint());
+                                if (rocketBounds.Intersects(new Rectangle((position - texture.Bounds.Size.ToVector2() * scale * 0.5f).ToPoint(), (texture.Bounds.Size.ToVector2() * scale).ToPoint())))
+                                {
+                                    move = false;
+                                    explode = true;
+                                    rocket.dead = true;
+                                    rocket.move = false;
+                                    rocket.chasingPlayer = false;
+                                    rocket.stopShoot = true;
+                                    increaseScore = true;
+                                    break;
+                                }
+                            }
+                        }
                     }
                 }
 

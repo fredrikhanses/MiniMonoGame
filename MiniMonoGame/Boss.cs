@@ -6,7 +6,6 @@ namespace MiniMonoGame
     public class Boss : Enemy
     {
         public Rocket[] rockets;
-        bool increaseScore;
 
         public void InitBoss(Vector2 position, Vector2 scale, Player player, int screenWidth, int screenHeight, float rotation = 0.0f, float speed = 100.0f, float chaseRadius = 450.0f, float rotationSpeed = 1.0f, float movementTolerance = 1.0f, int numberOfBullets = 5, int numberOfRockets = 2)
         {
@@ -15,7 +14,7 @@ namespace MiniMonoGame
             for (int i = 0; i < numberOfRockets; i++)
             {
                 Rocket rocket = new Rocket();
-                rocket.InitRocket(position, Vector2.One, screenWidth, screenHeight, 0.0f, 400.0f, null, player);
+                rocket.InitRocket(position, Vector2.One, player, screenWidth, screenHeight, 0.0f, 400.0f, 1000.0f, 10.0f, 5.0f, 0);
                 rockets[i] = rocket;
             }
         }
@@ -24,8 +23,7 @@ namespace MiniMonoGame
         {
             foreach(Rocket rocket in rockets)
             {
-                rocket.texture = rocketTexture;
-                rocket.explosionTexture = explosionTexture;
+                rocket.LoadContent(rocketTexture, bulletTexture, explosionTexture);
             }
             LoadContent(bossTexture, bulletTexture, explosionTexture);
         }
@@ -34,11 +32,9 @@ namespace MiniMonoGame
         {
             Update(deltaTime);
 
-            Vector2 shootDirection = player.position - position;
-            shootDirection.Normalize();
             foreach (Rocket rocket in rockets)
             {
-                rocket.UpdateRocket(deltaTime, true, out stopShoot, position, shootDirection, out increaseScore);
+                rocket.UpdateRocket(deltaTime);
             }
         }
 
@@ -48,6 +44,10 @@ namespace MiniMonoGame
             foreach (Rocket rocket in rockets)
             {
                 rocket.DrawRocket(spriteBatch);
+                if (!dead && rocket.explosionTimer <= 0.0f)
+                {
+                    rocket.RespawnRocket();
+                }
             }
         }
 
@@ -56,7 +56,8 @@ namespace MiniMonoGame
             Respawn();
             foreach (Rocket rocket in rockets)
             {
-                rocket.move = false;
+                rocket.RespawnRocket();
+                rocket.position = position;
             }
         }
     }
