@@ -28,7 +28,7 @@ namespace MiniMonoGame
         private Texture2D explosionTexture;
         public float explosionTimer;
 
-        public void Init(Vector2 position, Vector2 scale, int screenWidth, int screenHeight, float rotation = 0.0f, float speed = 100.0f, float rotationSpeed = 1.0f, float movementTolerance = 1.0f, int numberOfBullets = 100, Enemy[] enemies = null)
+        public void Init(Vector2 position, Vector2 scale, int screenWidth, int screenHeight, float rotation = 0.0f, float speed = 100.0f, float rotationSpeed = 1.0f, float movementTolerance = 1.0f, int numberOfBullets = 100, Enemy[] enemies = null, Boss boss = null)
         {
             InitEntity(position, scale, rotation);
             this.speed = speed;
@@ -47,7 +47,7 @@ namespace MiniMonoGame
             for (int i = 0; i < numberOfBullets; i++)
             {
                 Bullet bullet = new Bullet();
-                bullet.Init(position, new Vector2(0.2f, 0.2f), screenWidth, screenHeight, 0.0f, 600.0f, enemies);
+                bullet.Init(position, new Vector2(0.2f, 0.2f), screenWidth, screenHeight, 0.0f, 600.0f, enemies, null, boss);
                 bullets[i] = bullet;
             }
         }

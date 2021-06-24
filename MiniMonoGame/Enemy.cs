@@ -20,12 +20,13 @@ namespace MiniMonoGame
         public Vector2 forwardDirection;
         public Vector2 rightDirection;
         public Bullet[] bullets;
-        private Player player;
+        public Player player;
         private int screenWidth;
         private int screenHeight;
         private bool _increaseScore;
         public Texture2D explosionTexture;
         public float explosionTimer;
+        public string texturePath;
 
         public void Init(Vector2 position, Vector2 scale, Player player, int screenWidth, int screenHeight, float rotation = 0.0f, float speed = 100.0f, float chaseRadius = 450.0f, float rotationSpeed = 1.0f, float movementTolerance = 1.0f, int numberOfBullets = 5)
         {
@@ -174,6 +175,10 @@ namespace MiniMonoGame
             explosionTimer = 0.5f;
             position = new Vector2(screenWidth * 0.5f, texture.Height);
             dead = false;
+            foreach (Bullet bullet in bullets)
+            {
+                bullet.move = false;
+            }
         }
     }
 }

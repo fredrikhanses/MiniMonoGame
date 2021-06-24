@@ -9,17 +9,19 @@ namespace MiniMonoGame
         public bool move;
         private Player player;
         private Enemy[] enemies;
+        private Boss boss;
         private int screenWidth;
         private int screenHeight;
         public Texture2D explosionTexture;
         public bool explode;
         public float explosionTimer;
 
-        public void Init(Vector2 position, Vector2 scale, int screenWidth, int screenHeight, float rotation = 0.0f, float speed = 400.0f, Enemy[] enemies = null, Player player = null)
+        public void Init(Vector2 position, Vector2 scale, int screenWidth, int screenHeight, float rotation = 0.0f, float speed = 400.0f, Enemy[] enemies = null, Player player = null, Boss boss = null)
         {
             InitEntity(position, scale, rotation);
             this.speed = speed;
             this.enemies = enemies;
+            this.boss = boss;
             this.player = player;
             this.screenWidth = screenWidth;
             this.screenHeight = screenHeight;
@@ -79,8 +81,24 @@ namespace MiniMonoGame
                                 enemy.chasingPlayer = false;
                                 enemy.stopShoot = true;
                                 increaseScore = true;
+                                break;
                             }
                         }
+                    }
+                }
+
+                if (boss != null && !boss.dead)
+                {
+                    Rectangle enemyBounds = new Rectangle((boss.position - boss.texture.Bounds.Size.ToVector2() * boss.scale * 0.5f).ToPoint(), (boss.texture.Bounds.Size.ToVector2() * boss.scale).ToPoint());
+                    if (enemyBounds.Intersects(new Rectangle((position - texture.Bounds.Size.ToVector2() * scale * 0.5f).ToPoint(), (texture.Bounds.Size.ToVector2() * scale).ToPoint())))
+                    {
+                        move = false;
+                        explode = true;
+                        boss.dead = true;
+                        boss.move = false;
+                        boss.chasingPlayer = false;
+                        boss.stopShoot = true;
+                        increaseScore = true;
                     }
                 }
 
@@ -104,6 +122,7 @@ namespace MiniMonoGame
                                 bullet.move = false;
                                 explode = true;
                                 bullet.explode = true;
+                                break;
                             }
                         }
                     }
