@@ -23,7 +23,9 @@ namespace MiniMonoGame
         private Player player;
         private int screenWidth;
         private int screenHeight;
-        private bool increaseScore;
+        private bool _increaseScore;
+        public Texture2D explosionTexture;
+        public float explosionTimer;
 
         public void Init(Vector2 position, Vector2 scale, Player player, int screenWidth, int screenHeight, float rotation = 0.0f, float speed = 100.0f, float chaseRadius = 450.0f, float rotationSpeed = 1.0f, float movementTolerance = 1.0f, int numberOfBullets = 5)
         {
@@ -38,6 +40,7 @@ namespace MiniMonoGame
             dead = false;
             chasingPlayer = false;
             chaseRadiusSquared = chaseRadius * chaseRadius;
+            explosionTimer = 0.5f;
             forwardDirection = new Vector2(0.0f, -1.0f);
             rightDirection = new Vector2(1.0f, 0.0f);
             bullets = new Bullet[numberOfBullets];
@@ -49,12 +52,14 @@ namespace MiniMonoGame
             }
         }
 
-        public void LoadContent(Texture2D enemyTexture, Texture2D bulletTexture)
+        public void LoadContent(Texture2D enemyTexture, Texture2D bulletTexture, Texture2D explosionTexture)
         {
             texture = enemyTexture;
+            this.explosionTexture = explosionTexture;
             foreach (Bullet bullet in bullets)
             {
                 bullet.texture = bulletTexture;
+                bullet.explosionTexture = explosionTexture;
             }
         }
 
@@ -64,7 +69,7 @@ namespace MiniMonoGame
 
             foreach (Bullet bullet in bullets)
             {
-                bullet.Update(deltaTime, chasingPlayer, out stopShoot, position, forwardDirection, out increaseScore);
+                bullet.Update(deltaTime, chasingPlayer, out stopShoot, position, forwardDirection, out _increaseScore);
                 if (stopShoot)
                 {
                     chasingPlayer = false;
@@ -73,7 +78,10 @@ namespace MiniMonoGame
 
             if (dead)
             {
-                position = new Vector2(screenWidth * 0.5f, texture.Height);
+                if (explosionTimer >= 0.0f)
+                {
+                    explosionTimer -= deltaTime;
+                }
                 return;
             }
 
@@ -139,14 +147,21 @@ namespace MiniMonoGame
                 if (playerBounds.Intersects(new Rectangle((position - texture.Bounds.Size.ToVector2() * scale * 0.5f).ToPoint(), (texture.Bounds.Size.ToVector2() * scale).ToPoint())))
                 {
                     player.dead = true;
+                    dead = true;
                 }
             }
         }
 
         public void Draw(SpriteBatch spriteBatch)
         {
-            spriteBatch.Draw(texture, position, null, Color.White, rotation, new Vector2(texture.Width * 0.5f, texture.Height * 0.5f), scale, SpriteEffects.None, 0.0f);
-
+            if (!dead)
+            {
+                spriteBatch.Draw(texture, position, null, Color.White, rotation, new Vector2(texture.Width * 0.5f, texture.Height * 0.5f), scale, SpriteEffects.None, 0.0f);
+            }
+            else if(explosionTimer >= 0.0f)
+            {
+                spriteBatch.Draw(explosionTexture, position, null, Color.White, rotation, new Vector2(texture.Width * 0.5f, texture.Height * 0.5f), scale, SpriteEffects.None, 0.0f);
+            }
             foreach (Bullet bullet in bullets)
             {
                 bullet.Draw(spriteBatch);
@@ -156,6 +171,7 @@ namespace MiniMonoGame
         public void Respawn()
         {
             move = false;
+            explosionTimer = 0.5f;
             position = new Vector2(screenWidth * 0.5f, texture.Height);
             dead = false;
         }

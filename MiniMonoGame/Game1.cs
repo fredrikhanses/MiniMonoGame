@@ -25,6 +25,7 @@ namespace MiniMonoGame
         private Vector2 respawnFontSize;
         private const string scoreText = "Score ";
         private Vector2 scoreFontSize;
+        private float respawnTimer;
 
         public Game1()
         {
@@ -45,6 +46,7 @@ namespace MiniMonoGame
             {
                 enemies[i] = new Enemy();
             }
+            respawnTimer = 1.0f;
 
             planets = new Planet[numberOfPlanets];
             for (int i = 0; i < numberOfPlanets; i++)
@@ -83,11 +85,11 @@ namespace MiniMonoGame
         {
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
-            player.LoadContent(Content.Load<Texture2D>("ship"), Content.Load<Texture2D>("bullet"));
+            player.LoadContent(Content.Load<Texture2D>("ship"), Content.Load<Texture2D>("bullet"), Content.Load<Texture2D>("explosion"));
 
             foreach (Enemy enemy in enemies)
             {
-                enemy.LoadContent(Content.Load<Texture2D>("enemy"), Content.Load<Texture2D>("bullet"));
+                enemy.LoadContent(Content.Load<Texture2D>("enemy"), Content.Load<Texture2D>("bullet"), Content.Load<Texture2D>("explosion"));
             }
 
             foreach (Planet planet in planets)
@@ -125,9 +127,11 @@ namespace MiniMonoGame
                     player.position = new Vector2(graphics.PreferredBackBufferWidth * 0.5f, graphics.PreferredBackBufferHeight * 0.5f);
                     player.dead = false;
                     player.score = 0;
+                    player.explosionTimer = 0.5f;
                 }
                 else
                 {
+                    player.Update((float)gameTime.ElapsedGameTime.TotalSeconds);
                     return;
                 }
             }
@@ -140,7 +144,7 @@ namespace MiniMonoGame
             bool aliveEnemies = false;
             foreach (Enemy enemy in enemies)
             {
-                if (!enemy.dead)
+                if (!enemy.dead && enemy.explosionTimer != 0.0f)
                 {
                     aliveEnemies = true;
                 }
@@ -148,9 +152,14 @@ namespace MiniMonoGame
             }
             if (!aliveEnemies)
             {
-                foreach (Enemy enemy in enemies)
+                respawnTimer -= (float)gameTime.ElapsedGameTime.TotalSeconds;
+                if (respawnTimer <= 0.0f)
                 {
-                    enemy.Respawn();
+                    foreach (Enemy enemy in enemies)
+                    {
+                        enemy.Respawn();
+                    }
+                    respawnTimer = 1.0f;
                 }
             }
 
@@ -177,24 +186,14 @@ namespace MiniMonoGame
             
             foreach (Enemy enemy in enemies)
             {
-                if (!enemy.dead)
-                {
-                    enemy.Draw(spriteBatch);
-                }
-                else
-                {
-                    foreach (Bullet bullet in enemy.bullets)
-                    {
-                        bullet.Draw(spriteBatch);
-                    }
-                }
+                enemy.Draw(spriteBatch);
             }
 
             player.Draw(spriteBatch);
 
             DrawScoreText();
 
-            if (player.dead)
+            if (player.dead && player.explosionTimer <= 0.0f)
             {
                 DrawPauseText();
                 DrawDeadText();
@@ -235,7 +234,7 @@ namespace MiniMonoGame
 
         private void DrawScoreText()
         {
-            spriteBatch.DrawString(spriteFont, scoreText + player.score, new Vector2(graphics.PreferredBackBufferWidth * 0.1f - scoreFontSize.X * 0.5f, graphics.PreferredBackBufferHeight * 0.1f - scoreFontSize.Y * 0.5f), Color.Red);
+            spriteBatch.DrawString(spriteFont, scoreText + player.score, new Vector2(graphics.PreferredBackBufferWidth * 0.1f - scoreFontSize.X * 0.5f, graphics.PreferredBackBufferHeight * 0.1f - scoreFontSize.Y * 0.5f), Color.Cyan);
         }
     }
 }

@@ -11,6 +11,10 @@ namespace MiniMonoGame
         private Enemy[] enemies;
         private int screenWidth;
         private int screenHeight;
+        public Texture2D explosionTexture;
+        public bool explode;
+        public float explosionTimer;
+
         public void Init(Vector2 position, Vector2 scale, int screenWidth, int screenHeight, float rotation = 0.0f, float speed = 400.0f, Enemy[] enemies = null, Player player = null)
         {
             InitEntity(position, scale, rotation);
@@ -20,12 +24,29 @@ namespace MiniMonoGame
             this.screenWidth = screenWidth;
             this.screenHeight = screenHeight;
             move = false;
+            explode = false;
+            explosionTimer = 0.5f;
         }
 
         public void Update(float deltaTime, bool shoot, out bool stopShoot, Vector2 initPosition, Vector2 initDirecton, out bool increaseScore)
         {
             UpdateEntity(deltaTime);
             increaseScore = false;
+
+            if (explode)
+            {
+                if (explosionTimer >= 0.0f)
+                {
+                    explosionTimer -= deltaTime;
+                }
+                else
+                {
+                    explode = false;
+                }
+                stopShoot = true;
+                return;
+            }
+
             // Shoot Bullet
             if (shoot && !move)
             {
@@ -52,6 +73,7 @@ namespace MiniMonoGame
                             if (enemyBounds.Intersects(new Rectangle((position - texture.Bounds.Size.ToVector2() * scale * 0.5f).ToPoint(), (texture.Bounds.Size.ToVector2() * scale).ToPoint())))
                             {
                                 move = false;
+                                explode = true;
                                 enemy.dead = true;
                                 enemy.move = false;
                                 enemy.chasingPlayer = false;
@@ -68,6 +90,7 @@ namespace MiniMonoGame
                     if (playerBounds.Intersects(new Rectangle((position - texture.Bounds.Size.ToVector2() * scale * 0.5f).ToPoint(), (texture.Bounds.Size.ToVector2() * scale).ToPoint())))
                     {
                         move = false;
+                        explode = true;
                         player.dead = true;
                     }
                     foreach (Bullet bullet in player.bullets)
@@ -79,6 +102,8 @@ namespace MiniMonoGame
                             {
                                 move = false;
                                 bullet.move = false;
+                                explode = true;
+                                bullet.explode = true;
                             }
                         }
                     }
@@ -98,6 +123,10 @@ namespace MiniMonoGame
             if (move)
             {
                 spriteBatch.Draw(texture, position, null, Color.White, rotation, new Vector2(texture.Width * 0.5f, texture.Height * 0.5f), scale, SpriteEffects.None, 0.0f);
+            }
+            else if (explode && explosionTimer >= 0.0f)
+            {
+                spriteBatch.Draw(explosionTexture, position, null, Color.White, rotation, new Vector2(texture.Width * 0.5f, texture.Height * 0.5f), scale, SpriteEffects.None, 0.0f);
             }
         }
     }

@@ -25,6 +25,8 @@ namespace MiniMonoGame
         private int screenHeight;
         public int score;
         private bool increaseScore;
+        private Texture2D explosionTexture;
+        public float explosionTimer;
 
         public void Init(Vector2 position, Vector2 scale, int screenWidth, int screenHeight, float rotation = 0.0f, float speed = 100.0f, float rotationSpeed = 1.0f, float movementTolerance = 1.0f, int numberOfBullets = 100, Enemy[] enemies = null)
         {
@@ -36,6 +38,7 @@ namespace MiniMonoGame
             this.screenHeight = screenHeight;
             move = false;
             dead = false;
+            explosionTimer = 0.5f;
             score = 0;
             increaseScore = false;
             forwardDirection = new Vector2(0.0f, -1.0f);
@@ -49,18 +52,29 @@ namespace MiniMonoGame
             }
         }
 
-        public void LoadContent(Texture2D playerTexture, Texture2D bulletTexture)
+        public void LoadContent(Texture2D playerTexture, Texture2D bulletTexture, Texture2D explosionTexture)
         {
             texture = playerTexture;
+            this.explosionTexture = explosionTexture;
             foreach (Bullet bullet in bullets)
             {
                 bullet.texture = bulletTexture;
+                bullet.explosionTexture = explosionTexture;
             }
         }
 
         public void Update(float deltaTime)
         {
             UpdateEntity(deltaTime);
+
+            if (dead)
+            {
+                if (explosionTimer >= 0.0f)
+                {
+                    explosionTimer -= deltaTime;
+                }
+                return;
+            }
 
             // Mouse Player movement
             MouseState mouseState = Mouse.GetState();
@@ -190,7 +204,14 @@ namespace MiniMonoGame
 
         public void Draw(SpriteBatch spriteBatch)
         {
-            spriteBatch.Draw(texture, position, null, Color.White, rotation, new Vector2(texture.Width * 0.5f, texture.Height * 0.5f), scale, SpriteEffects.None, 0.0f);
+            if (!dead)
+            {
+                spriteBatch.Draw(texture, position, null, Color.White, rotation, new Vector2(texture.Width * 0.5f, texture.Height * 0.5f), scale, SpriteEffects.None, 0.0f);
+            }
+            else// if (explosionTimer >= 0.0f)
+            {
+                spriteBatch.Draw(explosionTexture, position, null, Color.White, rotation, new Vector2(texture.Width * 0.5f, texture.Height * 0.5f), scale, SpriteEffects.None, 0.0f);
+            }
 
             foreach (Bullet bullet in bullets)
             {
