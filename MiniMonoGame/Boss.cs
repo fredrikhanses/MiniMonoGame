@@ -5,58 +5,60 @@ namespace MiniMonoGame
 {
     public class Boss : Enemy
     {
-        public Rocket[] rockets;
+        public Enemy[] rockets;
 
-        public void InitBoss(Vector2 position, Vector2 scale, Player player, int screenWidth, int screenHeight, float rotation = 0.0f, float speed = 100.0f, float chaseRadius = 450.0f, float rotationSpeed = 1.0f, float movementTolerance = 1.0f, int numberOfBullets = 5, int numberOfRockets = 2)
+        public override void Init(Vector2 position, Vector2 scale, Player player, int screenWidth, int screenHeight, float rotation = 0.0f, float speed = 50.0f, float chaseRadius = 450.0f, float rotationSpeed = 0.0f, float movementTolerance = 2.0f, int numberOfRockets = 1, int health = 10)
         {
-            Init(position, scale, player, screenWidth, screenHeight, rotation, speed, chaseRadius, rotationSpeed, movementTolerance, numberOfBullets);
-            rockets = new Rocket[numberOfRockets];
+            base.Init(position, scale, player, screenWidth, screenHeight, rotation, speed, chaseRadius, rotationSpeed, movementTolerance, 0, health);
+            rockets = new Enemy[numberOfRockets];
             for (int i = 0; i < numberOfRockets; i++)
             {
-                Rocket rocket = new Rocket();
-                rocket.InitRocket(position, Vector2.One, player, screenWidth, screenHeight, 0.0f, 400.0f, 1000.0f, 10.0f, 5.0f, 0);
+                Enemy rocket = new Enemy();
+                rocket.Init(position, Vector2.One, player, screenWidth, screenHeight, 0.0f, 400.0f, 10000.0f, 10.0f, 5.0f, 0, 1);
                 rockets[i] = rocket;
             }
         }
 
-        public void LoadContentBoss(Texture2D bossTexture, Texture2D bulletTexture, Texture2D rocketTexture, Texture2D explosionTexture)
+        public override void LoadContent(Texture2D bossTexture, Texture2D rocketTexture, Texture2D explosionTexture)
         {
-            foreach(Rocket rocket in rockets)
+            Texture2D rocketExplosionTexture = Game.Loader.Load<Texture2D>("explosion");
+            foreach(Enemy rocket in rockets)
             {
-                rocket.LoadContent(rocketTexture, bulletTexture, explosionTexture);
+                rocket.LoadContent(rocketTexture, rocketTexture, rocketExplosionTexture);
             }
-            LoadContent(bossTexture, bulletTexture, explosionTexture);
+            base.LoadContent(bossTexture, rocketTexture, explosionTexture);
         }
 
-        public void UpdateBoss(float deltaTime)
+        public override void Update(float deltaTime)
         {
-            Update(deltaTime);
+            base.Update(deltaTime);
 
-            foreach (Rocket rocket in rockets)
+            foreach (Enemy rocket in rockets)
             {
-                rocket.UpdateRocket(deltaTime);
+                rocket.Update(deltaTime);
             }
         }
 
-        public void DrawBoss(SpriteBatch spriteBatch)
+        public override void Draw(SpriteBatch spriteBatch)
         {
-            Draw(spriteBatch);
-            foreach (Rocket rocket in rockets)
+            base.Draw(spriteBatch);
+            foreach (Enemy rocket in rockets)
             {
-                rocket.DrawRocket(spriteBatch);
+                rocket.Draw(spriteBatch);
                 if (!dead && rocket.explosionTimer <= 0.0f)
                 {
-                    rocket.RespawnRocket();
+                    rocket.Respawn();
+                    rocket.position = position;
                 }
             }
         }
 
-        public void RespawnBoss()
+        public override void Respawn()
         {
-            Respawn();
-            foreach (Rocket rocket in rockets)
+            base.Respawn();
+            foreach (Enemy rocket in rockets)
             {
-                rocket.RespawnRocket();
+                rocket.Respawn();
                 rocket.position = position;
             }
         }

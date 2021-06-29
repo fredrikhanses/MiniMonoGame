@@ -20,7 +20,7 @@ namespace MiniMonoGame
         private int screenHeight;
         public void Init(Vector2 position, Vector2 scale, int screenWidth, int screenHeight, float rotation = 0.0f, float speed = 100.0f, float rotationSpeed = 1.0f, float movementTolerance = 1.0f)
         {
-            InitEntity(position, scale, rotation);
+            Init(position, scale, rotation);
             this.speed = speed;
             this.movementTolerance = movementTolerance;
             this.rotationSpeed = rotationSpeed;
@@ -38,8 +38,6 @@ namespace MiniMonoGame
 
         public void Update(float deltaTime)
         {
-            UpdateEntity(deltaTime);
-
             // Planet movement
             if (!move)
             {

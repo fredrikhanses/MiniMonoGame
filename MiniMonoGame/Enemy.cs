@@ -27,16 +27,20 @@ namespace MiniMonoGame
         public Texture2D explosionTexture;
         public float explosionTimer;
         public string texturePath;
+        private int health;
+        private int baseHealth;
 
-        public void Init(Vector2 position, Vector2 scale, Player player, int screenWidth, int screenHeight, float rotation = 0.0f, float speed = 100.0f, float chaseRadius = 450.0f, float rotationSpeed = 1.0f, float movementTolerance = 1.0f, int numberOfBullets = 5)
+        public virtual void Init(Vector2 position, Vector2 scale, Player player, int screenWidth, int screenHeight, float rotation = 0.0f, float speed = 100.0f, float chaseRadius = 450.0f, float rotationSpeed = 1.0f, float movementTolerance = 1.0f, int numberOfBullets = 5, int health = 1)
         {
-            InitEntity(position, scale, rotation);
+            Init(position, scale, rotation);
             this.speed = speed;
             this.movementTolerance = movementTolerance;
             this.rotationSpeed = rotationSpeed;
             this.player = player;
             this.screenWidth = screenWidth;
             this.screenHeight = screenHeight;
+            this.health = health;
+            baseHealth = health;
             move = false;
             dead = false;
             chasingPlayer = false;
@@ -53,7 +57,7 @@ namespace MiniMonoGame
             }
         }
 
-        public void LoadContent(Texture2D enemyTexture, Texture2D bulletTexture, Texture2D explosionTexture)
+        public virtual void LoadContent(Texture2D enemyTexture, Texture2D bulletTexture, Texture2D explosionTexture)
         {
             texture = enemyTexture;
             this.explosionTexture = explosionTexture;
@@ -64,10 +68,8 @@ namespace MiniMonoGame
             }
         }
 
-        public void Update(float deltaTime)
+        public virtual void Update(float deltaTime)
         {
-            UpdateEntity(deltaTime);
-
             foreach (Bullet bullet in bullets)
             {
                 bullet.Update(deltaTime, chasingPlayer, out stopShoot, position, forwardDirection, out _increaseScore);
@@ -153,7 +155,7 @@ namespace MiniMonoGame
             }
         }
 
-        public void Draw(SpriteBatch spriteBatch)
+        public virtual void Draw(SpriteBatch spriteBatch)
         {
             if (!dead)
             {
@@ -161,7 +163,7 @@ namespace MiniMonoGame
             }
             else if(explosionTimer >= 0.0f)
             {
-                spriteBatch.Draw(explosionTexture, position, null, Color.White, rotation, new Vector2(texture.Width * 0.5f, texture.Height * 0.5f), scale, SpriteEffects.None, 0.0f);
+                spriteBatch.Draw(explosionTexture, position, null, Color.White, rotation, new Vector2(explosionTexture.Width * 0.5f, explosionTexture.Height * 0.5f), scale, SpriteEffects.None, 0.0f);
             }
             foreach (Bullet bullet in bullets)
             {
@@ -169,16 +171,37 @@ namespace MiniMonoGame
             }
         }
 
-        public void Respawn()
+        public virtual void Respawn()
         {
             move = false;
             explosionTimer = 0.5f;
-            position = new Vector2(screenWidth * 0.5f, texture.Height);
+            position = new Vector2(screenWidth * 0.5f, 32.0f);
             dead = false;
+            health = baseHealth;
             foreach (Bullet bullet in bullets)
             {
                 bullet.move = false;
             }
+        }
+
+        public virtual bool DecreaseHealth()
+        {
+            health--;
+            if (health <= 0)
+            {
+                Die();
+                return true;
+            }
+            return false;
+        }
+
+        public virtual void Die()
+        {
+            dead = true;
+            move = false;
+            chasingPlayer = false;
+            stopShoot = true;
+            health = baseHealth;
         }
     }
 }

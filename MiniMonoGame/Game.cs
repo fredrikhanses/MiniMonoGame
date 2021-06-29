@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Media;
@@ -6,8 +7,9 @@ using System;
 
 namespace MiniMonoGame
 {
-    public class Game1 : Game
+    public class Game : Microsoft.Xna.Framework.Game
     {
+        public static ContentManager Loader { get; private set; }
         private const int numberOfEnemies = 100;
         private const int numberOfPlanets = 2;
         private readonly Player player;
@@ -28,7 +30,7 @@ namespace MiniMonoGame
         private Vector2 scoreFontSize;
         private float respawnTimer;
 
-        public Game1()
+        public Game()
         {
             graphics = new GraphicsDeviceManager(this);
             graphics.ApplyChanges();
@@ -37,7 +39,8 @@ namespace MiniMonoGame
             graphics.ApplyChanges();
             //graphics.ToggleFullScreen();
             graphics.SynchronizeWithVerticalRetrace = false;
-            Content.RootDirectory = "Content";
+            Loader = Content;
+            Loader.RootDirectory = "Content";
             IsMouseVisible = true;
 
             respawnTimer = 1.0f;
@@ -80,13 +83,13 @@ namespace MiniMonoGame
 
         protected override void Initialize()
         {
-            player.Init(new Vector2(graphics.PreferredBackBufferWidth * 0.5f, graphics.PreferredBackBufferHeight * 0.5f), Vector2.One, graphics.PreferredBackBufferWidth, graphics.PreferredBackBufferHeight, 0.0f, 200.0f, 5.0f, 1.0f, 100, enemies, boss);
+            player.Init(new Vector2(graphics.PreferredBackBufferWidth * 0.5f, graphics.PreferredBackBufferHeight * 0.75f), Vector2.One, graphics.PreferredBackBufferWidth, graphics.PreferredBackBufferHeight, 0.0f, 200.0f, 5.0f, 1.0f, 100, enemies, boss);
             
             foreach (Enemy enemy in enemies)
             {
-                enemy.Init(new Vector2(graphics.PreferredBackBufferWidth * 0.5f, 32.0f), Vector2.One, player, graphics.PreferredBackBufferWidth, graphics.PreferredBackBufferHeight, 0.0f, 100.0f, 450.0f, 1.0f, 2.0f, 1);
+                enemy.Init(new Vector2(graphics.PreferredBackBufferWidth * 0.5f, 32.0f), Vector2.One, player, graphics.PreferredBackBufferWidth, graphics.PreferredBackBufferHeight, 0.0f, 100.0f, 450.0f, 1.0f, 2.0f, 1, 1);
             }
-            boss.InitBoss(new Vector2(graphics.PreferredBackBufferWidth * 0.5f, 32.0f), new Vector2(0.5f, 0.5f), player, graphics.PreferredBackBufferWidth, graphics.PreferredBackBufferHeight, 0.0f, 50.0f, 450.0f, 0.0f, 2.0f, 0, 1);
+            boss.Init(new Vector2(graphics.PreferredBackBufferWidth * 0.5f, 32.0f), Vector2.One, player, graphics.PreferredBackBufferWidth, graphics.PreferredBackBufferHeight, 0.0f, 50.0f, 450.0f, 0.0f, 2.0f, 1, 100);
 
             Random random = new Random();
             foreach (Planet planet in planets)
@@ -108,7 +111,7 @@ namespace MiniMonoGame
                 enemy.LoadContent(Content.Load<Texture2D>(enemy.texturePath), Content.Load<Texture2D>("bullet"), Content.Load<Texture2D>("explosion"));
             }
 
-            boss.LoadContentBoss(Content.Load<Texture2D>("death-star"), Content.Load<Texture2D>("bullet"), Content.Load<Texture2D>("rocket"), Content.Load<Texture2D>("explosion"));
+            boss.LoadContent(Content.Load<Texture2D>("death-star"), Content.Load<Texture2D>("rocket"), Content.Load<Texture2D>("explosion-big"));
 
             foreach (Planet planet in planets)
             {
@@ -142,10 +145,11 @@ namespace MiniMonoGame
                 KeyboardState keyboardState = Keyboard.GetState();
                 if (keyboardState.IsKeyDown(Keys.R))
                 {
-                    player.position = new Vector2(graphics.PreferredBackBufferWidth * 0.5f, graphics.PreferredBackBufferHeight * 0.5f);
+                    player.position = new Vector2(graphics.PreferredBackBufferWidth * 0.5f, graphics.PreferredBackBufferHeight * 0.75f);
                     player.dead = false;
                     player.score = 0;
                     player.explosionTimer = 0.5f;
+                    player.rotation = 0.0f;
                     foreach (Bullet bullet in player.bullets)
                     {
                         bullet.move = false;
@@ -154,7 +158,7 @@ namespace MiniMonoGame
                     {
                         enemy.Respawn();
                     }
-                    boss.RespawnBoss();
+                    boss.Respawn();
                 }
                 else
                 {
@@ -177,7 +181,7 @@ namespace MiniMonoGame
                 }
                 enemy.Update((float)gameTime.ElapsedGameTime.TotalSeconds);
             }
-            boss.UpdateBoss((float)gameTime.ElapsedGameTime.TotalSeconds);
+            boss.Update((float)gameTime.ElapsedGameTime.TotalSeconds);
             if (!boss.dead)
             {
                 aliveEnemies = true;
@@ -191,7 +195,7 @@ namespace MiniMonoGame
                     {
                         enemy.Respawn();
                     }
-                    boss.RespawnBoss();
+                    boss.Respawn();
                     respawnTimer = 1.0f;
                 }
             }
@@ -217,7 +221,7 @@ namespace MiniMonoGame
 
             spriteBatch.Draw(portal, new Vector2(graphics.PreferredBackBufferWidth * 0.5f, 32.0f), null, Color.White, 0.0f, new Vector2(portal.Width * 0.5f, portal.Height * 0.5f), new Vector2(0.5f, 0.5f), SpriteEffects.None, 0.0f);
 
-            boss.DrawBoss(spriteBatch);
+            boss.Draw(spriteBatch);
 
             foreach (Enemy enemy in enemies)
             {

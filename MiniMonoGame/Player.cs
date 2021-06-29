@@ -30,7 +30,7 @@ namespace MiniMonoGame
 
         public void Init(Vector2 position, Vector2 scale, int screenWidth, int screenHeight, float rotation = 0.0f, float speed = 100.0f, float rotationSpeed = 1.0f, float movementTolerance = 1.0f, int numberOfBullets = 100, Enemy[] enemies = null, Boss boss = null)
         {
-            InitEntity(position, scale, rotation);
+            Init(position, scale, rotation);
             this.speed = speed;
             this.rotationSpeed = rotationSpeed;
             this.movementTolerance = movementTolerance;
@@ -65,8 +65,6 @@ namespace MiniMonoGame
 
         public void Update(float deltaTime)
         {
-            UpdateEntity(deltaTime);
-
             if (dead)
             {
                 if (explosionTimer >= 0.0f)

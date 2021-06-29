@@ -18,7 +18,7 @@ namespace MiniMonoGame
 
         public void Init(Vector2 position, Vector2 scale, int screenWidth, int screenHeight, float rotation = 0.0f, float speed = 400.0f, Enemy[] enemies = null, Player player = null, Boss boss = null)
         {
-            InitEntity(position, scale, rotation);
+            Init(position, scale, rotation);
             this.speed = speed;
             this.enemies = enemies;
             this.boss = boss;
@@ -32,7 +32,6 @@ namespace MiniMonoGame
 
         public void Update(float deltaTime, bool shoot, out bool stopShoot, Vector2 initPosition, Vector2 initDirecton, out bool increaseScore)
         {
-            UpdateEntity(deltaTime);
             increaseScore = false;
 
             if (explode)
@@ -76,11 +75,7 @@ namespace MiniMonoGame
                             {
                                 move = false;
                                 explode = true;
-                                enemy.dead = true;
-                                enemy.move = false;
-                                enemy.chasingPlayer = false;
-                                enemy.stopShoot = true;
-                                increaseScore = true;
+                                increaseScore = enemy.DecreaseHealth();
                                 break;
                             }
                         }
@@ -96,17 +91,13 @@ namespace MiniMonoGame
                         {
                             move = false;
                             explode = true;
-                            boss.dead = true;
-                            boss.move = false;
-                            boss.chasingPlayer = false;
-                            boss.stopShoot = true;
-                            increaseScore = true;
+                            increaseScore = boss.DecreaseHealth();
                         }
                     }
 
                     if (!explode)
                     {
-                        foreach (Rocket rocket in boss.rockets)
+                        foreach (Enemy rocket in boss.rockets)
                         {
                             if (!rocket.dead)
                             {
@@ -115,11 +106,7 @@ namespace MiniMonoGame
                                 {
                                     move = false;
                                     explode = true;
-                                    rocket.dead = true;
-                                    rocket.move = false;
-                                    rocket.chasingPlayer = false;
-                                    rocket.stopShoot = true;
-                                    increaseScore = true;
+                                    increaseScore = rocket.DecreaseHealth();
                                     break;
                                 }
                             }
@@ -144,8 +131,8 @@ namespace MiniMonoGame
                             if (playerBulletBounds.Intersects(new Rectangle((position - texture.Bounds.Size.ToVector2() * scale * 0.5f).ToPoint(), (texture.Bounds.Size.ToVector2() * scale).ToPoint())))
                             {
                                 move = false;
-                                bullet.move = false;
                                 explode = true;
+                                bullet.move = false;
                                 bullet.explode = true;
                                 break;
                             }
