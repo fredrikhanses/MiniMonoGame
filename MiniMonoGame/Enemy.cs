@@ -178,6 +178,7 @@ namespace MiniMonoGame
             position = new Vector2(screenWidth * 0.5f, 32.0f);
             dead = false;
             health = baseHealth;
+            chasingPlayer = false;
             foreach (Bullet bullet in bullets)
             {
                 bullet.move = false;

@@ -27,6 +27,8 @@ namespace MiniMonoGame
         private bool increaseScore;
         private Texture2D explosionTexture;
         public float explosionTimer;
+        private float defaultSpeed;
+        private float speedBoost;
 
         public void Init(Vector2 position, Vector2 scale, int screenWidth, int screenHeight, float rotation = 0.0f, float speed = 100.0f, float rotationSpeed = 1.0f, float movementTolerance = 1.0f, int numberOfBullets = 100, Enemy[] enemies = null, Boss boss = null)
         {
@@ -36,6 +38,8 @@ namespace MiniMonoGame
             this.movementTolerance = movementTolerance;
             this.screenWidth = screenWidth;
             this.screenHeight = screenHeight;
+            defaultSpeed = speed;
+            speedBoost = 2.0f;
             move = false;
             dead = false;
             explosionTimer = 0.5f;
@@ -125,28 +129,40 @@ namespace MiniMonoGame
             // Keyboard/Game pad Player movement
             KeyboardState keyboardState = Keyboard.GetState();
             GamePadState gamePadState = GamePad.GetState(PlayerIndex.One);
-            if (keyboardState.IsKeyDown(Keys.Up) || keyboardState.IsKeyDown(Keys.W) || gamePadState.ThumbSticks.Right.Y > 0.0f)
+            if ((keyboardState.IsKeyDown(Keys.LeftShift) || gamePadState.IsButtonDown(Buttons.RightShoulder)) && !(move && 
+                (keyboardState.IsKeyDown(Keys.Up) || keyboardState.IsKeyDown(Keys.W) || gamePadState.IsButtonDown(Buttons.RightTrigger) ||
+                keyboardState.IsKeyDown(Keys.Down) || keyboardState.IsKeyDown(Keys.S) || gamePadState.IsButtonDown(Buttons.LeftTrigger) ||
+                keyboardState.IsKeyDown(Keys.Left) || keyboardState.IsKeyDown(Keys.A) || gamePadState.IsButtonDown(Buttons.LeftThumbstickLeft) ||
+                keyboardState.IsKeyDown(Keys.Right) || keyboardState.IsKeyDown(Keys.D) || gamePadState.IsButtonDown(Buttons.LeftThumbstickRight))))
+            {
+                speed = defaultSpeed * speedBoost;
+            }
+            else
+            {
+                speed = defaultSpeed;
+            }
+            if (keyboardState.IsKeyDown(Keys.Up) || keyboardState.IsKeyDown(Keys.W) || gamePadState.IsButtonDown(Buttons.RightTrigger))
             {
                 position += speed * deltaTime * forwardDirection;
                 move = false;
             }
-            if (keyboardState.IsKeyDown(Keys.Down) || keyboardState.IsKeyDown(Keys.S) || gamePadState.ThumbSticks.Right.Y < 0.0f)
+            if (keyboardState.IsKeyDown(Keys.Down) || keyboardState.IsKeyDown(Keys.S) || gamePadState.IsButtonDown(Buttons.LeftTrigger))
             {
                 position -= speed * deltaTime * forwardDirection;
                 move = false;
             }
-            if (keyboardState.IsKeyDown(Keys.Left) || keyboardState.IsKeyDown(Keys.A) || gamePadState.ThumbSticks.Right.X < 0.0f)
+            if (keyboardState.IsKeyDown(Keys.Left) || keyboardState.IsKeyDown(Keys.A) || gamePadState.IsButtonDown(Buttons.LeftThumbstickLeft))
             {
                 position -= speed * deltaTime * rightDirection;
                 move = false;
             }
-            if (keyboardState.IsKeyDown(Keys.Right) || keyboardState.IsKeyDown(Keys.D) || gamePadState.ThumbSticks.Right.X > 0.0f)
+            if (keyboardState.IsKeyDown(Keys.Right) || keyboardState.IsKeyDown(Keys.D) || gamePadState.IsButtonDown(Buttons.LeftThumbstickRight))
             {
                 position += speed * deltaTime * rightDirection;
                 move = false;
             }
 
-            if (keyboardState.IsKeyDown(Keys.Q))
+            if (keyboardState.IsKeyDown(Keys.Q) || gamePadState.IsButtonDown(Buttons.RightThumbstickLeft))
             {
                 rotation -= rotationSpeed * deltaTime;
                 if (rotation < -2.0f * (float)Math.PI)
@@ -158,7 +174,7 @@ namespace MiniMonoGame
                 forwardDirection = -new Vector2((float)Math.Cos(rotation + (float)Math.PI * 0.5f), (float)Math.Sin(rotation + (float)Math.PI * 0.5f));
                 forwardDirection.Normalize();
             }
-            if (keyboardState.IsKeyDown(Keys.E))
+            if (keyboardState.IsKeyDown(Keys.E) || gamePadState.IsButtonDown(Buttons.RightThumbstickRight))
             {
                 rotation += rotationSpeed * deltaTime;
                 if (rotation > 2.0f * (float)Math.PI)
@@ -180,7 +196,7 @@ namespace MiniMonoGame
                 shootDirection.Normalize();
                 shoot = true;
             }
-            if (keyboardState.IsKeyDown(Keys.Space))
+            if (keyboardState.IsKeyDown(Keys.Space) || gamePadState.IsButtonDown(Buttons.LeftShoulder))
             {
                 shootDirection = forwardDirection;
                 shoot = true;
@@ -206,7 +222,7 @@ namespace MiniMonoGame
             {
                 spriteBatch.Draw(texture, position, null, Color.White, rotation, new Vector2(texture.Width * 0.5f, texture.Height * 0.5f), scale, SpriteEffects.None, 0.0f);
             }
-            else// if (explosionTimer >= 0.0f)
+            else
             {
                 spriteBatch.Draw(explosionTexture, position, null, Color.White, rotation, new Vector2(texture.Width * 0.5f, texture.Height * 0.5f), scale, SpriteEffects.None, 0.0f);
             }

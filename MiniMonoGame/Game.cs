@@ -37,7 +37,7 @@ namespace MiniMonoGame
             graphics.PreferredBackBufferWidth = GraphicsDevice.Adapter.CurrentDisplayMode.Width;
             graphics.PreferredBackBufferHeight = GraphicsDevice.Adapter.CurrentDisplayMode.Height;
             graphics.ApplyChanges();
-            //graphics.ToggleFullScreen();
+            graphics.ToggleFullScreen();
             graphics.SynchronizeWithVerticalRetrace = false;
             Loader = Content;
             Loader.RootDirectory = "Content";
@@ -89,7 +89,7 @@ namespace MiniMonoGame
             {
                 enemy.Init(new Vector2(graphics.PreferredBackBufferWidth * 0.5f, 32.0f), Vector2.One, player, graphics.PreferredBackBufferWidth, graphics.PreferredBackBufferHeight, 0.0f, 100.0f, 450.0f, 1.0f, 2.0f, 1, 1);
             }
-            boss.Init(new Vector2(graphics.PreferredBackBufferWidth * 0.5f, 32.0f), Vector2.One, player, graphics.PreferredBackBufferWidth, graphics.PreferredBackBufferHeight, 0.0f, 50.0f, 450.0f, 0.0f, 2.0f, 1, 100);
+            boss.Init(new Vector2(graphics.PreferredBackBufferWidth * 0.5f, 32.0f), Vector2.One, player, graphics.PreferredBackBufferWidth, graphics.PreferredBackBufferHeight, 0.0f, 50.0f, 450.0f, 0.0f, 2.0f, 1, 1000);
 
             Random random = new Random();
             foreach (Planet planet in planets)
@@ -104,29 +104,29 @@ namespace MiniMonoGame
         {
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
-            player.LoadContent(Content.Load<Texture2D>("ship"), Content.Load<Texture2D>("bullet"), Content.Load<Texture2D>("explosion"));
+            player.LoadContent(Loader.Load<Texture2D>("ship"), Loader.Load<Texture2D>("bullet"), Loader.Load<Texture2D>("explosion"));
 
             foreach (Enemy enemy in enemies)
             {
-                enemy.LoadContent(Content.Load<Texture2D>(enemy.texturePath), Content.Load<Texture2D>("bullet"), Content.Load<Texture2D>("explosion"));
+                enemy.LoadContent(Loader.Load<Texture2D>(enemy.texturePath), Loader.Load<Texture2D>("bullet"), Loader.Load<Texture2D>("explosion"));
             }
 
-            boss.LoadContent(Content.Load<Texture2D>("death-star"), Content.Load<Texture2D>("rocket"), Content.Load<Texture2D>("explosion-big"));
+            boss.LoadContent(Loader.Load<Texture2D>("death-star"), Loader.Load<Texture2D>("rocket"), Loader.Load<Texture2D>("explosion-big"));
 
             foreach (Planet planet in planets)
             {
-                planet.LoadContent(Content.Load<Texture2D>(planet.texturePath));
+                planet.LoadContent(Loader.Load<Texture2D>(planet.texturePath));
             }
 
-            portal = Content.Load<Texture2D>("portal");
+            portal = Loader.Load<Texture2D>("portal");
 
-            Mouse.SetCursor(MouseCursor.FromTexture2D(Content.Load<Texture2D>("cursor"), 0, 0));
+            Mouse.SetCursor(MouseCursor.FromTexture2D(Loader.Load<Texture2D>("cursor"), 0, 0));
 
-            Song song = Content.Load<Song>("sci-fi_theme");
+            Song song = Loader.Load<Song>("sci-fi_theme");
             MediaPlayer.Play(song);
             MediaPlayer.IsRepeating = true;
 
-            spriteFont = Content.Load<SpriteFont>("Pause");
+            spriteFont = Loader.Load<SpriteFont>("Pause");
             pauseFontSize = spriteFont.MeasureString(pausedText);
             deadFontSize = spriteFont.MeasureString(deadText);
             respawnFontSize = spriteFont.MeasureString(respawnText);
@@ -143,7 +143,8 @@ namespace MiniMonoGame
             if (player.dead)
             {
                 KeyboardState keyboardState = Keyboard.GetState();
-                if (keyboardState.IsKeyDown(Keys.R))
+                GamePadState gamePadState = GamePad.GetState(PlayerIndex.One);
+                if (keyboardState.IsKeyDown(Keys.R) || gamePadState.IsButtonDown(Buttons.Start))
                 {
                     player.position = new Vector2(graphics.PreferredBackBufferWidth * 0.5f, graphics.PreferredBackBufferHeight * 0.75f);
                     player.dead = false;
