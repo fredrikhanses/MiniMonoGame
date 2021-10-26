@@ -7,7 +7,7 @@ namespace MiniMonoGame
         [STAThread]
         static void Main()
         {
-            Game game = new Game();
+            GAME game = new GAME();
             game.Run();
         }
     }

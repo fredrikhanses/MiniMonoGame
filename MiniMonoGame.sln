@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
-VisualStudioVersion = 16.0.31410.357
+VisualStudioVersion = 16.0.31729.503
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MiniMonoGame", "MiniMonoGame\MiniMonoGame.csproj", "{D0779E20-FE43-4A7C-83F5-DC92DB371B6F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MiniMonoGame", "MiniMonoGame\MiniMonoGame.csproj", "{53084B94-0F94-41D8-9CE0-972963CAE979}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,15 +11,15 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{D0779E20-FE43-4A7C-83F5-DC92DB371B6F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D0779E20-FE43-4A7C-83F5-DC92DB371B6F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D0779E20-FE43-4A7C-83F5-DC92DB371B6F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D0779E20-FE43-4A7C-83F5-DC92DB371B6F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{53084B94-0F94-41D8-9CE0-972963CAE979}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{53084B94-0F94-41D8-9CE0-972963CAE979}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{53084B94-0F94-41D8-9CE0-972963CAE979}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{53084B94-0F94-41D8-9CE0-972963CAE979}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {123B542C-0A5F-449C-9FC7-DF7D72E83891}
+		SolutionGuid = {1FF1A083-A2B3-4451-8ED1-2FD3B75D9863}
 	EndGlobalSection
 EndGlobal

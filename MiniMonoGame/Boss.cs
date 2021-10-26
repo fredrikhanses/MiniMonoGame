@@ -3,37 +3,37 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace MiniMonoGame
 {
-    public class Boss : Enemy
+    public class Boss : Enemy, IBoss
     {
-        public Enemy[] rockets;
+        public IEnemy[] Rockets { get; private set; }
 
-        public override void Init(Vector2 position, Vector2 scale, Player player, int screenWidth, int screenHeight, float rotation = 0.0f, float speed = 50.0f, float chaseRadius = 450.0f, float rotationSpeed = 0.0f, float movementTolerance = 2.0f, int numberOfRockets = 1, int health = 10)
+        public override void Init(Vector2 position, Vector2 scale, float rotation = 0.0f, float speed = 50.0f, float chaseRadius = 450.0f, float rotationSpeed = 0.0f, float movementTolerance = 2.0f, int numberOfRockets = 1, int health = 10)
         {
-            base.Init(position, scale, player, screenWidth, screenHeight, rotation, speed, chaseRadius, rotationSpeed, movementTolerance, 0, health);
-            rockets = new Enemy[numberOfRockets];
+            base.Init(position, scale, rotation, speed, chaseRadius, rotationSpeed, movementTolerance, 0, health);
+            Rockets = new IEnemy[numberOfRockets];
             for (int i = 0; i < numberOfRockets; i++)
             {
-                Enemy rocket = new Enemy();
-                rocket.Init(position, Vector2.One, player, screenWidth, screenHeight, 0.0f, 400.0f, 10000.0f, 10.0f, 5.0f, 0, 1);
-                rockets[i] = rocket;
+                IEnemy rocket = new Enemy();
+                rocket.Init(position, Vector2.One, 0.0f, 400.0f, 10000.0f, 10.0f, 5.0f, 0, 1);
+                Rockets[i] = rocket;
             }
         }
 
-        public override void LoadContent(Texture2D bossTexture, Texture2D rocketTexture, Texture2D explosionTexture)
+        public override void LoadContent(Texture2D bossTexture, Texture2D bossExplosionTexture, Texture2D rocketTexture)
         {
-            Texture2D rocketExplosionTexture = Game.Loader.Load<Texture2D>("explosion");
-            foreach(Enemy rocket in rockets)
+            Texture2D rocketExplosionTexture = GAME.Loader.Load<Texture2D>("explosion");
+            foreach(IEnemy rocket in Rockets)
             {
-                rocket.LoadContent(rocketTexture, rocketTexture, rocketExplosionTexture);
+                rocket.LoadContent(rocketTexture, rocketExplosionTexture);
             }
-            base.LoadContent(bossTexture, rocketTexture, explosionTexture);
+            base.LoadContent(bossTexture, bossExplosionTexture);
         }
 
         public override void Update(float deltaTime)
         {
             base.Update(deltaTime);
 
-            foreach (Enemy rocket in rockets)
+            foreach (IEnemy rocket in Rockets)
             {
                 rocket.Update(deltaTime);
             }
@@ -42,24 +42,24 @@ namespace MiniMonoGame
         public override void Draw(SpriteBatch spriteBatch)
         {
             base.Draw(spriteBatch);
-            foreach (Enemy rocket in rockets)
+
+            foreach (IEnemy rocket in Rockets)
             {
                 rocket.Draw(spriteBatch);
-                if (!dead && rocket.explosionTimer <= 0.0f)
+                if (!Dead && rocket.ExplosionTimer <= 0.0f)
                 {
-                    rocket.Respawn();
-                    rocket.position = position;
+                    rocket.Respawn(Position);
                 }
             }
         }
 
-        public override void Respawn()
+        public override void Respawn(Vector2 position)
         {
-            base.Respawn();
-            foreach (Enemy rocket in rockets)
+            base.Respawn(position);
+
+            foreach (IEnemy rocket in Rockets)
             {
-                rocket.Respawn();
-                rocket.position = position;
+                rocket.Respawn(position);
             }
         }
     }
