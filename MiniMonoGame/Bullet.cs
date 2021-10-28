@@ -17,9 +17,11 @@ namespace MiniMonoGame
         private float explosionTimer;
         private bool explode;
         private bool playerOwned;
+        private int damage;
 
-        public void Init(Vector2 position, Vector2 scale, bool playerOwned = false, float rotation = 0.0f, float speed = 400.0f)
+        public void Init(Vector2 position, Vector2 scale, bool playerOwned = false, float rotation = 0.0f, float speed = 400.0f, int damage = 1)
         {
+            this.damage = damage;
             Position = position;
             this.rotation = rotation;
             Scale = scale;
@@ -79,7 +81,7 @@ namespace MiniMonoGame
                         if (!enemy.Dead && CheckCollision(enemy))
                         {
                             Explode();
-                            increaseScore = enemy.DecreaseHealth();
+                            increaseScore = enemy.DecreaseHealth(damage);
                             return;
                         }
                     }
@@ -89,14 +91,14 @@ namespace MiniMonoGame
                         if (!rocket.Dead && CheckCollision(rocket))
                         {
                             Explode();
-                            increaseScore = rocket.DecreaseHealth();
+                            rocket.DecreaseHealth(damage);
                             return;
                         }
                     }
                     if (!GAME.BossEnemy.Dead && CheckCollision(GAME.BossEnemy))
                     {
                         Explode();
-                        increaseScore = GAME.BossEnemy.DecreaseHealth();
+                        increaseScore = GAME.BossEnemy.DecreaseHealth(damage);
                         return;
                     }
                 }
@@ -105,7 +107,7 @@ namespace MiniMonoGame
                     if (CheckCollision(GAME.Player))
                     {
                         Explode();
-                        GAME.Player.Die();
+                        GAME.Player.DecreaseHealth(damage);
                         return;
                     }
                     foreach (IBullet bullet in GAME.Player.Bullets)

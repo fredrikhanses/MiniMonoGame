@@ -6,15 +6,22 @@ namespace MiniMonoGame
     public class Boss : Enemy, IBoss
     {
         public IEnemy[] Rockets { get; private set; }
+        public bool Spinning { get; private set; }
 
-        public override void Init(Vector2 position, Vector2 scale, float rotation = 0.0f, float speed = 50.0f, float chaseRadius = 450.0f, float rotationSpeed = 0.0f, float movementTolerance = 2.0f, int numberOfRockets = 1, int health = 10)
+        private float baseChaseRadiusSquared;
+        private const float spinChaseRadiusSquared = 100000000.0f;
+        private const float spinSpeed = 10.0f;
+
+        public override void Init(Vector2 position, Vector2 scale, float rotation = 0.0f, float speed = 50.0f, float chaseRadius = 450.0f, float rotationSpeed = 0.0f, float movementTolerance = 2.0f, int numberOfRockets = 1, int health = 10, int bulletDamage = 1)
         {
-            base.Init(position, scale, rotation, speed, chaseRadius, rotationSpeed, movementTolerance, 0, health);
+            base.Init(position, scale, rotation, speed, chaseRadius, rotationSpeed, movementTolerance, 100, health, bulletDamage);
+            Spinning = false;
+            baseChaseRadiusSquared = ChaseRadiusSquared;
             Rockets = new IEnemy[numberOfRockets];
             for (int i = 0; i < numberOfRockets; i++)
             {
                 IEnemy rocket = new Enemy();
-                rocket.Init(position, Vector2.One, 0.0f, 400.0f, 10000.0f, 10.0f, 5.0f, 0, 1);
+                rocket.Init(position, Vector2.One, 0.0f, 400.0f, 10000.0f, 10.0f, 5.0f, 0, 1, bulletDamage);
                 Rockets[i] = rocket;
             }
         }
@@ -26,12 +33,17 @@ namespace MiniMonoGame
             {
                 rocket.LoadContent(rocketTexture, rocketExplosionTexture);
             }
-            base.LoadContent(bossTexture, bossExplosionTexture);
+            base.LoadContent(bossTexture, bossExplosionTexture, GAME.Loader.Load<Texture2D>("bullet"));
         }
 
         public override void Update(float deltaTime)
         {
             base.Update(deltaTime);
+
+            if (Spinning && !Dead)
+            {
+                Rotation += deltaTime * spinSpeed;
+            }
 
             foreach (IEnemy rocket in Rockets)
             {
@@ -57,10 +69,20 @@ namespace MiniMonoGame
         {
             base.Respawn(position);
 
+            Spinning = false;
+            Rotation = 0.0f;
+            ChaseRadiusSquared = baseChaseRadiusSquared;
+
             foreach (IEnemy rocket in Rockets)
             {
                 rocket.Respawn(position);
             }
+        }
+
+        public void StartToSpin()
+        {
+            Spinning = true;
+            ChaseRadiusSquared = spinChaseRadiusSquared;
         }
     }
 }

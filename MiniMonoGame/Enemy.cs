@@ -9,45 +9,46 @@ namespace MiniMonoGame
         public string TexturePath { get; set; }
         public IBullet[] Bullets { get; private set; }
         public Texture2D Texture { get; private set; }
+        public Texture2D ExplosionTexture { get; private set; }
         public Vector2 Position { get; private set; }
         public Vector2 Scale { get; private set; }
         public float ExplosionTimer { get; private set; }
+        public float Rotation { get; set; }
+        public float ChaseRadiusSquared { get; set; }
+        public int BaseHealth { get; private set; }
+        public int CurrentHealth { get; private set; }
         public bool Dead { get; private set; }
 
-        private Texture2D explosionTexture;
         private Vector2 direction;
         private Vector2 destination;
         private Vector2 forwardDirection;
         private Vector2 rightDirection;
-        private float rotation;
         private float rotationSpeed;
         private float rotationDestination;
         private float rotationAlpha;
         private float speed;
         private float movementTolerance;
-        private float chaseRadiusSquared;
-        private int health;
-        private int baseHealth;
+        private const int dropChance = 1;
         private bool move;
         private bool chasingPlayer;
         private bool stopShoot;
         private bool _increaseScore;
 
-        public virtual void Init(Vector2 position, Vector2 scale, float rotation = 0.0f, float speed = 100.0f, float chaseRadius = 450.0f, float rotationSpeed = 1.0f, float movementTolerance = 1.0f, int numberOfBullets = 5, int health = 1)
+        public virtual void Init(Vector2 position, Vector2 scale, float rotation = 0.0f, float speed = 100.0f, float chaseRadius = 450.0f, float rotationSpeed = 1.0f, float movementTolerance = 2.0f, int numberOfBullets = 1, int health = 1, int bulletDamage = 1)
         {
             this.speed = speed;
             this.movementTolerance = movementTolerance;
             this.rotationSpeed = rotationSpeed;
-            this.health = health;
+            CurrentHealth = health;
             Position = position;
-            this.rotation = rotation;
+            Rotation = rotation;
             Scale = scale;
             direction = Vector2.Zero;
-            baseHealth = health;
+            BaseHealth = health;
             move = false;
             Dead = false;
             chasingPlayer = false;
-            chaseRadiusSquared = chaseRadius * chaseRadius;
+            ChaseRadiusSquared = chaseRadius * chaseRadius;
             ExplosionTimer = 0.5f;
             forwardDirection = new Vector2(0.0f, -1.0f);
             rightDirection = new Vector2(1.0f, 0.0f);
@@ -55,7 +56,7 @@ namespace MiniMonoGame
             for (int i = 0; i < numberOfBullets; i++)
             {
                 IBullet bullet = new Bullet();
-                bullet.Init(position, new Vector2(0.2f, 0.2f));
+                bullet.Init(position, new Vector2(0.2f, 0.2f), false, 0.0f, 400.0f, bulletDamage);
                 Bullets[i] = bullet;
             }
         }
@@ -63,7 +64,7 @@ namespace MiniMonoGame
         public virtual void LoadContent(Texture2D enemyTexture, Texture2D explosionTexture, Texture2D bulletTexture = null)
         {
             Texture = enemyTexture;
-            this.explosionTexture = explosionTexture;
+            ExplosionTexture = explosionTexture;
             foreach (IBullet bullet in Bullets)
             {
                 bullet.LoadContent(bulletTexture, explosionTexture);
@@ -74,11 +75,11 @@ namespace MiniMonoGame
         {
             foreach (IBullet bullet in Bullets)
             {
-                bullet.Update(deltaTime, chasingPlayer, out stopShoot, Position, forwardDirection, out _increaseScore);
-                if (stopShoot)
+                if (stopShoot || (this is IBoss && !(this as IBoss).Spinning))
                 {
                     chasingPlayer = false;
                 }
+                bullet.Update(deltaTime, chasingPlayer, out stopShoot, Position, forwardDirection, out _increaseScore);
             }
 
             if (Dead)
@@ -91,7 +92,7 @@ namespace MiniMonoGame
             }
 
             // Enemy movement
-            if ((GAME.Player.Position - Position).LengthSquared() < chaseRadiusSquared && GAME.Player.Position != Position)
+            if ((GAME.Player.Position - Position).LengthSquared() < ChaseRadiusSquared && GAME.Player.Position != Position)
             {
                 destination = GAME.Player.Position;
                 direction = Position - destination;
@@ -117,25 +118,25 @@ namespace MiniMonoGame
                 {
                     if (rotationDestination <= (float)Math.PI)
                     {
-                        rotation += rotationDestination * rotationSpeed * deltaTime;
+                        Rotation += rotationDestination * rotationSpeed * deltaTime;
                         rotationAlpha += rotationSpeed * deltaTime;
                     }
                     else if (rotationDestination > (float)Math.PI)
                     {
-                        rotation -= rotationDestination * rotationSpeed * deltaTime;
+                        Rotation -= rotationDestination * rotationSpeed * deltaTime;
                         rotationAlpha += rotationSpeed * deltaTime;
                     }
-                    if (rotation < -2.0f * (float)Math.PI)
+                    if (Rotation < -2.0f * (float)Math.PI)
                     {
-                        rotation += 2.0f * (float)Math.PI;
+                        Rotation += 2.0f * (float)Math.PI;
                     }
-                    if (rotation > 2.0f * (float)Math.PI)
+                    if (Rotation > 2.0f * (float)Math.PI)
                     {
-                        rotation -= 2.0f * (float)Math.PI;
+                        Rotation -= 2.0f * (float)Math.PI;
                     }
-                    rightDirection = new Vector2((float)Math.Cos(rotation), (float)Math.Sin(rotation));
+                    rightDirection = new Vector2((float)Math.Cos(Rotation), (float)Math.Sin(Rotation));
                     rightDirection.Normalize();
-                    forwardDirection = -new Vector2((float)Math.Cos(rotation + (float)Math.PI * 0.5f), (float)Math.Sin(rotation + (float)Math.PI * 0.5f));
+                    forwardDirection = -new Vector2((float)Math.Cos(Rotation + (float)Math.PI * 0.5f), (float)Math.Sin(Rotation + (float)Math.PI * 0.5f));
                     forwardDirection.Normalize();
                 }
                 Position -= direction * speed * deltaTime;
@@ -149,8 +150,8 @@ namespace MiniMonoGame
                 //Enemy-Player Collision
                 if (CheckCollision(GAME.Player))
                 {
-                    GAME.Player.Die();
-                    Dead = true;
+                    GAME.Player.DecreaseHealth(BaseHealth);
+                    DecreaseHealth(BaseHealth);
                 }
             }
         }
@@ -159,11 +160,11 @@ namespace MiniMonoGame
         {
             if (!Dead)
             {
-                spriteBatch.Draw(Texture, Position, null, Color.White, rotation, new Vector2(Texture.Width * 0.5f, Texture.Height * 0.5f), Scale, SpriteEffects.None, 0.0f);
+                spriteBatch.Draw(Texture, Position, null, Color.White, Rotation, new Vector2(Texture.Width * 0.5f, Texture.Height * 0.5f), Scale, SpriteEffects.None, 0.0f);
             }
             else if(ExplosionTimer >= 0.0f)
             {
-                spriteBatch.Draw(explosionTexture, Position, null, Color.White, rotation, new Vector2(explosionTexture.Width * 0.5f, explosionTexture.Height * 0.5f), Scale, SpriteEffects.None, 0.0f);
+                spriteBatch.Draw(ExplosionTexture, Position, null, Color.White, Rotation, new Vector2(ExplosionTexture.Width * 0.5f, ExplosionTexture.Height * 0.5f), Scale, SpriteEffects.None, 0.0f);
             }
             foreach (IBullet bullet in Bullets)
             {
@@ -177,7 +178,7 @@ namespace MiniMonoGame
             ExplosionTimer = 0.5f;
             Position = position;
             Dead = false;
-            health = baseHealth;
+            CurrentHealth = BaseHealth;
             chasingPlayer = false;
             foreach (IBullet bullet in Bullets)
             {
@@ -185,10 +186,10 @@ namespace MiniMonoGame
             }
         }
 
-        public bool DecreaseHealth()
+        public bool DecreaseHealth(int amount = 1)
         {
-            health--;
-            if (health <= 0)
+            CurrentHealth -= amount;
+            if (CurrentHealth <= 0)
             {
                 Die();
                 return true;
@@ -202,7 +203,12 @@ namespace MiniMonoGame
             move = false;
             chasingPlayer = false;
             stopShoot = true;
-            health = baseHealth;
+            CurrentHealth = BaseHealth;
+            int randomNumber = GAME.RNG.Next(100);
+            if (randomNumber < dropChance)
+            {
+                GAME.AddHealthDrop(Position);
+            }
         }
 
         private Rectangle GetBounds(Vector2 position, Texture2D texture, Vector2 scale)

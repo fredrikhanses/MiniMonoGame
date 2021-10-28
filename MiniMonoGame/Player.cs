@@ -7,35 +7,39 @@ namespace MiniMonoGame
 {
     public class Player : IPlayer
     {
-        public bool Dead { get; private set; }
         public IBullet[] Bullets { get; private set; }
-        public int Score { get; private set; }
-        public float ExplosionTimer { get; private set; }
         public Texture2D Texture { get; private set; }
         public Vector2 Position { get; private set; }
         public Vector2 Scale { get; private set; }
+        public float ExplosionTimer { get; private set; }
+        public int Score { get; private set; }
+        public int CurrentHealth { get; private set; }
+        public int BaseHealth { get; private set; }
+        public bool Dead { get; private set; }
 
+        private Texture2D explosionTexture;
         private Vector2 direction;
+        private Vector2 destination;
+        private Vector2 shootDirection;
+        private Vector2 forwardDirection;
+        private Vector2 rightDirection;
         private float rotation;
         private float speed;
         private float rotationSpeed;
         private float movementTolerance;
         private float rotationDestination;
+        private float rotationAlpha;
+        private float defaultSpeed;
+        private float speedBoost;
         private bool move;
         private bool shoot;
         private bool stopShoot;
-        private float rotationAlpha;
-        private Vector2 destination;
-        private Vector2 shootDirection;
-        private Vector2 forwardDirection;
-        private Vector2 rightDirection;
         private bool increaseScore;
-        private Texture2D explosionTexture;
-        private float defaultSpeed;
-        private float speedBoost;
 
-        public void Init(Vector2 position, Vector2 scale, float rotation = 0.0f, float speed = 100.0f, float rotationSpeed = 1.0f, float movementTolerance = 1.0f, int numberOfBullets = 100)
+        public void Init(Vector2 position, Vector2 scale, float rotation = 0.0f, float speed = 200.0f, float rotationSpeed = 2.0f, float movementTolerance = 1.0f, int numberOfBullets = 100, int health = 10, int bulletDamage = 1)
         {
+            BaseHealth = health;
+            CurrentHealth = health;
             this.speed = speed;
             this.rotationSpeed = rotationSpeed;
             this.movementTolerance = movementTolerance;
@@ -56,7 +60,7 @@ namespace MiniMonoGame
             for (int i = 0; i < numberOfBullets; i++)
             {
                 IBullet bullet = new Bullet();
-                bullet.Init(position, new Vector2(0.2f, 0.2f), true, 0.0f, 600.0f);
+                bullet.Init(position, new Vector2(0.2f, 0.2f), true, 0.0f, 600.0f, bulletDamage);
                 Bullets[i] = bullet;
             }
         }
@@ -236,7 +240,25 @@ namespace MiniMonoGame
             }
         }
 
-        public void Die()
+        public void DecreaseHealth(int amount = 1)
+        {
+            CurrentHealth -= amount;
+            if (CurrentHealth <= 0)
+            {
+                Die();
+            }
+        }
+
+        public void IncreaseHealth(int amount = 1)
+        {
+            CurrentHealth += amount;
+            if (CurrentHealth > BaseHealth)
+            {
+                CurrentHealth = BaseHealth;
+            }
+        }
+
+        private void Die()
         {
             Dead = true;
         }
@@ -267,6 +289,9 @@ namespace MiniMonoGame
 
         public void Respawn(Vector2 position)
         {
+            forwardDirection = new Vector2(0.0f, -1.0f);
+            rightDirection = new Vector2(1.0f, 0.0f);
+            CurrentHealth = BaseHealth;
             Position = position;
             Dead = false;
             Score = 0;
