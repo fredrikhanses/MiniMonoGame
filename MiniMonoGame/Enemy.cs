@@ -30,7 +30,7 @@ namespace MiniMonoGame
         private float movementTolerance;
         private const int dropChance = 1;
         private bool move;
-        private bool chasingPlayer;
+        private IPlayer chasingPlayer;
         private bool stopShoot;
         private bool _increaseScore;
 
@@ -47,7 +47,7 @@ namespace MiniMonoGame
             BaseHealth = health;
             move = false;
             Dead = false;
-            chasingPlayer = false;
+            chasingPlayer = null;
             ChaseRadiusSquared = chaseRadius * chaseRadius;
             ExplosionTimer = 0.5f;
             forwardDirection = new Vector2(0.0f, -1.0f);
@@ -77,14 +77,14 @@ namespace MiniMonoGame
             {
                 if (stopShoot || (this is IBoss && !(this as IBoss).Spinning))
                 {
-                    chasingPlayer = false;
+                    chasingPlayer = null;
                 }
-                bullet.Update(deltaTime, chasingPlayer, out stopShoot, Position, forwardDirection, out _increaseScore);
+                bullet.Update(deltaTime, chasingPlayer != null, out stopShoot, Position, forwardDirection, out _increaseScore);
             }
 
             if (Dead)
             {
-                if (ExplosionTimer >= 0.0f)
+                if (ExplosionTimer > 0.0f)
                 {
                     ExplosionTimer -= deltaTime;
                 }
@@ -92,14 +92,31 @@ namespace MiniMonoGame
             }
 
             // Enemy movement
-            if ((GAME.Player.Position - Position).LengthSquared() < ChaseRadiusSquared && GAME.Player.Position != Position)
+            foreach (IPlayer player in GAME.Players)
             {
-                destination = GAME.Player.Position;
+                if (!player.Dead && player.Position != Position)
+                {
+                    float distanceSquared = (player.Position - Position).LengthSquared();
+                    if (distanceSquared < ChaseRadiusSquared)
+                    {
+                        if (chasingPlayer == null)
+                        {
+                            chasingPlayer = player;
+                        }
+                        else if (distanceSquared < (chasingPlayer.Position - Position).LengthSquared())
+                        {
+                            chasingPlayer = player;
+                        }
+                    }
+                }
+            }
+            if (chasingPlayer != null)
+            {
+                destination = chasingPlayer.Position;
                 direction = Position - destination;
                 direction.Normalize();
                 rotationDestination = (float)Math.Atan2(direction.Y * -forwardDirection.X - direction.X * -forwardDirection.Y, direction.X * -forwardDirection.X + direction.Y * -forwardDirection.Y);
                 move = true;
-                chasingPlayer = true;
                 rotationAlpha = 0.0f;
             }
             if (!move)
@@ -148,10 +165,13 @@ namespace MiniMonoGame
                 }
 
                 //Enemy-Player Collision
-                if (CheckCollision(GAME.Player))
+                foreach (IPlayer player in GAME.Players)
                 {
-                    GAME.Player.DecreaseHealth(BaseHealth);
-                    DecreaseHealth(BaseHealth);
+                    if (!player.Dead && CheckCollision(player))
+                    {
+                        player.DecreaseHealth(BaseHealth);
+                        DecreaseHealth(BaseHealth);
+                    }
                 }
             }
         }
@@ -179,7 +199,7 @@ namespace MiniMonoGame
             Position = position;
             Dead = false;
             CurrentHealth = BaseHealth;
-            chasingPlayer = false;
+            chasingPlayer = null;
             foreach (IBullet bullet in Bullets)
             {
                 bullet.Respawn();
@@ -201,13 +221,13 @@ namespace MiniMonoGame
         {
             Dead = true;
             move = false;
-            chasingPlayer = false;
+            chasingPlayer = null;
             stopShoot = true;
             CurrentHealth = BaseHealth;
             int randomNumber = GAME.RNG.Next(100);
             if (randomNumber < dropChance)
             {
-                GAME.AddHealthDrop(Position);
+                GAME.AddPickup(Position);
             }
         }
 

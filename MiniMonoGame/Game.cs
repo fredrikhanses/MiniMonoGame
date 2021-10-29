@@ -11,12 +11,12 @@ namespace MiniMonoGame
     public class GAME : Game
     {
         public static ContentManager Loader { get; private set; }
-        public static IPlayer Player { get; private set; }
+        public static List<IPlayer> Players { get; private set; }
         public static List<IEnemy> Enemies { get; private set; }
         public static IPlanet[] Planets { get; private set; }
         public static IBoss Boss { get; private set; }
         public static IEnemy BossEnemy { get; private set; }
-        public static List<IHealthDrop> HealthDrops { get; private set; }
+        public static List<IPickup> Pickups { get; private set; }
         public static Random RNG { get; private set; }
         public static int ScreenWidth { get; private set; }
         public static int ScreenHeight { get; private set; }
@@ -35,6 +35,7 @@ namespace MiniMonoGame
         private Vector2 bossHealthFontSize;
         private Vector2 enemiesLeftFontSize;
         private Vector2 levelFontSize;
+        private Vector2 energyFontSize;
         private const string pausedText = "Paused";
         private const string deadText = "You Died";
         private const string respawnText = "Press R or Start to Respawn";
@@ -43,11 +44,14 @@ namespace MiniMonoGame
         private const string bossHealthText = "Boss ";
         private const string enemiesLeftText = "Enemies ";
         private const string levelText = "Level ";
+        private const string energyText = "Energy ";
         private const int numberOfEnemies = 100;
         private const int numberOfPlanets = 2;
+        private const int numberOfPlayers = 3;
         private float respawnTimer;
         private int enemiesLeft;
         private int currentLevel;
+        private int playersLeft;
 
         public GAME()
         {
@@ -68,28 +72,31 @@ namespace MiniMonoGame
             currentLevel = 1;
             RNG = new Random(DateTime.Now.Second);
 
-            Player = new Player();
+            Players = new List<IPlayer>(numberOfPlayers);         
+            for (int i = 0; i < numberOfPlayers; i++)
+            {
+                Players.Add(new Player(i));
+            }
             playerStart = new Vector2(ScreenWidth * 0.5f, ScreenHeight * 0.75f);
 
-            HealthDrops = new List<IHealthDrop>();
-            HealthDrops.Add(new HealthDrop());
+            Pickups = new List<IPickup>
+            {
+                new HealthPickup(),
+                new EnergyPickup()
+            };
 
             enemyStart = new Vector2(ScreenWidth * 0.5f, ScreenHeight * 0.03f);
             Enemies = new List<IEnemy>(numberOfEnemies);
             for (int i = 0; i < numberOfEnemies; i++)
             {
                 Enemies.Add(new Enemy());
-                if (i % 5 == 0)
+                if (i % 2 == 0)
                 {
                     Enemies[i].TexturePath = "enemy";
                 }
-                else if (i % 3 == 0)
-                {
-                    Enemies[i].TexturePath = "spaceship";
-                }
                 else
                 {
-                    Enemies[i].TexturePath = "scout-ship";
+                    Enemies[i].TexturePath = "spaceship";
                 }
             }
             Boss = new Boss();
@@ -112,11 +119,14 @@ namespace MiniMonoGame
 
         protected override void Initialize()
         {
-            Player.Init(playerStart, Vector2.One);
-
-            foreach (IHealthDrop healthdrop in HealthDrops)
+            foreach (IPlayer player in Players)
             {
-                healthdrop.Init(new Vector2(RNG.Next(ScreenWidth), RNG.Next(ScreenHeight)), Vector2.One);
+                player.Init(playerStart + new Vector2(100.0f * player.Index, 0.0f), Vector2.One);
+            }
+
+            foreach (IPickup pickup in Pickups)
+            {
+                pickup.Init(new Vector2(RNG.Next(ScreenWidth), RNG.Next(ScreenHeight)), Vector2.One);
             }
 
             foreach (IEnemy enemy in Enemies)
@@ -137,11 +147,30 @@ namespace MiniMonoGame
         {
             spriteBatch = new SpriteBatch(GraphicsDevice);
 
-            Player.LoadContent(Loader.Load<Texture2D>("ship"), Loader.Load<Texture2D>("explosion"), Loader.Load<Texture2D>("bullet"));
-
-            foreach (IHealthDrop healthdrop in HealthDrops)
+            foreach (IPlayer player in Players)
             {
-                healthdrop.LoadContent(Loader.Load<Texture2D>("healthDrop"));
+                if (player.Index == 0)
+                {
+                    player.LoadContent(Loader.Load<Texture2D>("ship"), Loader.Load<Texture2D>("explosion"), Loader.Load<Texture2D>("bullet"), Loader.Load<Texture2D>("shield"));
+                }
+                else
+                {
+                    player.LoadContent(Loader.Load<Texture2D>("scout-ship"), Loader.Load<Texture2D>("explosion"), Loader.Load<Texture2D>("bullet"), Loader.Load<Texture2D>("shield2"));
+                }
+            }
+
+            int index = 0;
+            foreach (IPickup pickup in Pickups)
+            {
+                if (index % 2 == 0)
+                {
+                    pickup.LoadContent(Loader.Load<Texture2D>("healthDrop"));
+                }
+                else
+                {
+                    pickup.LoadContent(Loader.Load<Texture2D>("energyPickup"));
+                }
+                index++;
             }
 
             foreach (IEnemy enemy in Enemies)
@@ -173,6 +202,7 @@ namespace MiniMonoGame
             bossHealthFontSize = spriteFont.MeasureString(bossHealthText);
             enemiesLeftFontSize = spriteFont.MeasureString(enemiesLeftText);
             levelFontSize = spriteFont.MeasureString(levelText);
+            energyFontSize = spriteFont.MeasureString(energyText);
         }
 
         protected override void Update(GameTime gameTime)
@@ -182,41 +212,46 @@ namespace MiniMonoGame
                 Exit();
             }
 
-            if (!Player.Dead)
+            playersLeft = 0;
+            foreach (IPlayer player in Players)
             {
-                Player.Update((float)gameTime.ElapsedGameTime.TotalSeconds);
+                player.Update((float)gameTime.ElapsedGameTime.TotalSeconds);
+                if (!player.Dead)
+                {
+                    playersLeft++;
+                }
             }
-            else
+
+            if (playersLeft <= 0)
             {
                 KeyboardState keyboardState = Keyboard.GetState();
                 GamePadState gamePadState = GamePad.GetState(PlayerIndex.One);
                 if (keyboardState.IsKeyDown(Keys.R) || gamePadState.IsButtonDown(Buttons.Start))
                 {
-                    Player.Respawn(playerStart);
-                    foreach (IHealthDrop healthdrop in HealthDrops)
+                    foreach (IPlayer player in Players)
                     {
-                        healthdrop.Respawn();
+                        player.Respawn(playerStart + new Vector2(100.0f * player.Index, 0.0f));
                     }
-                    foreach (IBullet bullet in Player.Bullets)
+                    foreach (IPickup pickup in Pickups)
                     {
-                        bullet.Respawn();
+                        pickup.Respawn();
                     }
                     foreach (IEnemy enemy in Enemies)
                     {
                         enemy.Respawn(enemyStart);
                     }
                     Boss.Respawn(enemyStart);
+                    return;
                 }
                 else
                 {
-                    Player.Update((float)gameTime.ElapsedGameTime.TotalSeconds);
                     return;
                 }
             }
 
-            foreach (IHealthDrop healthdrop in HealthDrops)
+            foreach (IPickup pickup in Pickups)
             {
-                healthdrop.Update((float)gameTime.ElapsedGameTime.TotalSeconds);
+                pickup.Update((float)gameTime.ElapsedGameTime.TotalSeconds);
             }
 
             enemiesLeft = 0;
@@ -237,7 +272,7 @@ namespace MiniMonoGame
             {
                 enemiesLeft++;
             }
-            if (enemiesLeft == 0)
+            if (enemiesLeft <= 0)
             {
                 respawnTimer -= (float)gameTime.ElapsedGameTime.TotalSeconds;
                 if (respawnTimer <= 0.0f)
@@ -247,8 +282,8 @@ namespace MiniMonoGame
                     for (int i = 0; i < numberOfEnemies; i++)
                     {
                         Enemies.Add(new Enemy());
-                        Enemies[Enemies.Count - 1].Init(enemyStart, Vector2.One);
-                        Enemies[Enemies.Count - 1].LoadContent(Enemies[i].Texture, Enemies[i].ExplosionTexture, Enemies[i].Bullets[0].Texture);
+                        Enemies[^1].Init(enemyStart, Vector2.One);
+                        Enemies[^1].LoadContent(Enemies[i].Texture, Enemies[i].ExplosionTexture, Enemies[i].Bullets[0].Texture);
                     }
                     foreach (IEnemy enemy in Enemies)
                     {
@@ -282,9 +317,9 @@ namespace MiniMonoGame
 
             Boss.Draw(spriteBatch);
 
-            foreach (IHealthDrop healthdrop in HealthDrops)
+            foreach (IPickup pickup in Pickups)
             {
-                healthdrop.Draw(spriteBatch);
+                pickup.Draw(spriteBatch);
             }
 
             foreach (IEnemy enemy in Enemies)
@@ -292,39 +327,51 @@ namespace MiniMonoGame
                 enemy.Draw(spriteBatch);
             }
 
-            Player.Draw(spriteBatch);
+            foreach (IPlayer player in Players)
+            {
+                player.Draw(spriteBatch);
 
-            DrawScoreText();
-            DrawHealthText();
+                if (playersLeft <= 0)
+                {
+                    DrawPauseText();
+                    DrawDeadText();
+                    DrawRespawnText();
+                }
+            }
+
+            DrawPlayerInfo();
             DrawEnemiesLeftText();
             DrawBossHealthText();
             DrawLevelText();
-
-            if (Player.Dead && Player.ExplosionTimer <= 0.0f)
-            {
-                DrawPauseText();
-                DrawDeadText();
-                DrawRespawnText();
-            }
 
             spriteBatch.End();
 
             base.Draw(gameTime);
         }
 
-        public static void AddHealthDrop(Vector2 position)
+        public static void AddPickup(Vector2 position)
         {
-            foreach (IHealthDrop healthdrop in HealthDrops)
+            foreach (IPickup pickup in Pickups)
             {
-                if (healthdrop.Used)
+                if (pickup.Used)
                 {
-                    healthdrop.Spawn(position);
+                    pickup.Spawn(position);
                     return;
                 }
             }
-            HealthDrops.Add(new HealthDrop());
-            HealthDrops[HealthDrops.Count - 1].Init(position, Vector2.One);
-            HealthDrops[HealthDrops.Count - 1].LoadContent(HealthDrops[0].Texture);
+            int randomNumber = RNG.Next(2);
+            if (randomNumber == 0)
+            {
+                Pickups.Add(new HealthPickup());
+                Pickups[^1].Init(position, Vector2.One);
+                Pickups[^1].LoadContent(Pickups[0].Texture);
+            }
+            else
+            {
+                Pickups.Add(new EnergyPickup());
+                Pickups[^1].Init(position, Vector2.One);
+                Pickups[^1].LoadContent(Pickups[1].Texture);
+            }
         }
 
         private void DrawPauseText()
@@ -342,29 +389,29 @@ namespace MiniMonoGame
             spriteBatch.DrawString(spriteFont, respawnText, new Vector2(ScreenWidth * 0.5f - respawnFontSize.X * 0.5f, ScreenHeight * 0.75f - respawnFontSize.Y * 0.5f), Color.Red);
         }
 
-        private void DrawScoreText()
+        private void DrawPlayerInfo()
         {
-            spriteBatch.DrawString(spriteFont, scoreText + Player.Score, new Vector2(ScreenWidth * 0.1f - scoreFontSize.X * 0.5f, ScreenHeight * 0.15f - scoreFontSize.Y * 0.5f), Color.Cyan);
-        }
-
-        private void DrawHealthText()
-        {
-            spriteBatch.DrawString(spriteFont, healthText + Player.CurrentHealth, new Vector2(ScreenWidth * 0.8f - healthFontSize.X * 0.5f, ScreenHeight * 0.05f - healthFontSize.Y * 0.5f), Color.Red);
+            foreach (IPlayer player in Players)
+            {
+                spriteBatch.DrawString(spriteFont, player.Index + scoreText + player.Score, new Vector2(ScreenWidth * 0.05f - scoreFontSize.X * 0.5f, ScreenHeight * 0.15f + ScreenHeight * 0.1f * player.Index - scoreFontSize.Y * 0.5f), Color.Cyan);
+                spriteBatch.DrawString(spriteFont, player.Index + healthText + player.CurrentHealth, new Vector2(ScreenWidth * 0.875f - healthFontSize.X * 0.5f, ScreenHeight * 0.05f + ScreenHeight * 0.3f * player.Index - healthFontSize.Y * 0.5f), Color.Red);
+                spriteBatch.DrawString(spriteFont, player.Index + energyText + (int)player.CurrentEnergy, new Vector2(ScreenWidth * 0.875f - energyFontSize.X * 0.5f, ScreenHeight * 0.15f + ScreenHeight * 0.3f * player.Index - energyFontSize.Y * 0.5f), Color.Cyan);
+            }
         }
 
         private void DrawEnemiesLeftText()
         {
-            spriteBatch.DrawString(spriteFont, enemiesLeftText + enemiesLeft, new Vector2(ScreenWidth * 0.1f - enemiesLeftFontSize.X * 0.5f, ScreenHeight * 0.25f - enemiesLeftFontSize.Y * 0.5f), Color.Yellow);
+            spriteBatch.DrawString(spriteFont, enemiesLeftText + enemiesLeft, new Vector2(ScreenWidth * 0.4f - enemiesLeftFontSize.X * 0.5f, ScreenHeight * 0.05f - enemiesLeftFontSize.Y * 0.5f), Color.Yellow);
         }
 
         private void DrawBossHealthText()
         {
-            spriteBatch.DrawString(spriteFont, bossHealthText + BossEnemy.CurrentHealth, new Vector2(ScreenWidth * 0.5f - bossHealthFontSize.X * 0.5f, ScreenHeight * 0.05f - bossHealthFontSize.Y * 0.5f), Color.Yellow);
+            spriteBatch.DrawString(spriteFont, bossHealthText + BossEnemy.CurrentHealth, new Vector2(ScreenWidth * 0.6f - bossHealthFontSize.X * 0.5f, ScreenHeight * 0.05f - bossHealthFontSize.Y * 0.5f), Color.Yellow);
         }
 
         private void DrawLevelText()
         {
-            spriteBatch.DrawString(spriteFont, levelText + currentLevel, new Vector2(ScreenWidth * 0.1f - levelFontSize.X * 0.5f, ScreenHeight * 0.05f - levelFontSize.Y * 0.5f), Color.Cyan);
+            spriteBatch.DrawString(spriteFont, levelText + currentLevel, new Vector2(ScreenWidth * 0.05f - levelFontSize.X * 0.5f, ScreenHeight * 0.05f - levelFontSize.Y * 0.5f), Color.Yellow);
         }
     }
 }

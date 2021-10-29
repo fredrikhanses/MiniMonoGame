@@ -15,9 +15,13 @@ namespace MiniMonoGame
         public int Score { get; private set; }
         public int CurrentHealth { get; private set; }
         public int BaseHealth { get; private set; }
+        public float CurrentEnergy { get; private set; }
+        public float BaseEnergy { get; private set; }
+        public int Index { get; private set; }
         public bool Dead { get; private set; }
 
         private Texture2D explosionTexture;
+        private Texture2D shieldTexture;
         private Vector2 direction;
         private Vector2 destination;
         private Vector2 shootDirection;
@@ -30,24 +34,17 @@ namespace MiniMonoGame
         private float rotationDestination;
         private float rotationAlpha;
         private float defaultSpeed;
-        private float speedBoost;
+        private readonly float speedBoost;
         private bool move;
         private bool shoot;
         private bool stopShoot;
         private bool increaseScore;
+        private bool usingShield;
 
-        public void Init(Vector2 position, Vector2 scale, float rotation = 0.0f, float speed = 200.0f, float rotationSpeed = 2.0f, float movementTolerance = 1.0f, int numberOfBullets = 100, int health = 10, int bulletDamage = 1)
+        public Player(int index)
         {
-            BaseHealth = health;
-            CurrentHealth = health;
-            this.speed = speed;
-            this.rotationSpeed = rotationSpeed;
-            this.movementTolerance = movementTolerance;
-            Position = position;
-            this.rotation = rotation;
-            Scale = scale;
+            Index = index;
             direction = Vector2.Zero;
-            defaultSpeed = speed;
             speedBoost = 2.0f;
             move = false;
             Dead = false;
@@ -56,6 +53,21 @@ namespace MiniMonoGame
             increaseScore = false;
             forwardDirection = new Vector2(0.0f, -1.0f);
             rightDirection = new Vector2(1.0f, 0.0f);
+        }
+
+        public void Init(Vector2 position, Vector2 scale, float rotation = 0.0f, float speed = 200.0f, float rotationSpeed = 2.0f, float movementTolerance = 1.0f, int numberOfBullets = 100, int health = 10, float energy = 10.0f, int bulletDamage = 1)
+        {
+            BaseEnergy = energy;
+            CurrentEnergy = BaseEnergy;
+            BaseHealth = health;
+            CurrentHealth = health;
+            defaultSpeed = speed;
+            this.speed = speed;
+            this.rotationSpeed = rotationSpeed;
+            this.movementTolerance = movementTolerance;
+            Position = position;
+            this.rotation = rotation;
+            Scale = scale;
             Bullets = new IBullet[numberOfBullets];
             for (int i = 0; i < numberOfBullets; i++)
             {
@@ -65,10 +77,11 @@ namespace MiniMonoGame
             }
         }
 
-        public void LoadContent(Texture2D playerTexture, Texture2D explosionTexture, Texture2D bulletTexture)
+        public void LoadContent(Texture2D playerTexture, Texture2D explosionTexture, Texture2D bulletTexture, Texture2D shieldTexture)
         {
             Texture = playerTexture;
             this.explosionTexture = explosionTexture;
+            this.shieldTexture = shieldTexture;
             foreach (IBullet bullet in Bullets)
             {
                 bullet.LoadContent(bulletTexture, explosionTexture);
@@ -79,7 +92,7 @@ namespace MiniMonoGame
         {
             if (Dead)
             {
-                if (ExplosionTimer >= 0.0f)
+                if (ExplosionTimer > 0.0f)
                 {
                     ExplosionTimer -= deltaTime;
                 }
@@ -88,7 +101,7 @@ namespace MiniMonoGame
 
             // Mouse Player movement
             MouseState mouseState = Mouse.GetState();
-            if (mouseState.RightButton == ButtonState.Pressed && mouseState.Position.ToVector2() != Position)
+            if (mouseState.RightButton == ButtonState.Pressed && Index == 0 && mouseState.Position.ToVector2() != Position)
             {
                 destination = mouseState.Position.ToVector2();
                 direction = Position - destination;
@@ -136,11 +149,11 @@ namespace MiniMonoGame
             // Keyboard/Game pad Player movement
             KeyboardState keyboardState = Keyboard.GetState();
             GamePadState gamePadState = GamePad.GetState(PlayerIndex.One);
-            if ((keyboardState.IsKeyDown(Keys.LeftShift) || gamePadState.IsButtonDown(Buttons.RightShoulder)) && !(move && 
-                (keyboardState.IsKeyDown(Keys.Up) || keyboardState.IsKeyDown(Keys.W) || gamePadState.IsButtonDown(Buttons.RightTrigger) ||
-                keyboardState.IsKeyDown(Keys.Down) || keyboardState.IsKeyDown(Keys.S) || gamePadState.IsButtonDown(Buttons.LeftTrigger) ||
-                keyboardState.IsKeyDown(Keys.Left) || keyboardState.IsKeyDown(Keys.A) || gamePadState.IsButtonDown(Buttons.LeftThumbstickLeft) ||
-                keyboardState.IsKeyDown(Keys.Right) || keyboardState.IsKeyDown(Keys.D) || gamePadState.IsButtonDown(Buttons.LeftThumbstickRight))))
+            if ((keyboardState.IsKeyDown(Keys.LeftShift) && Index == 1 || mouseState.XButton1 == ButtonState.Pressed && Index == 0 ||  gamePadState.IsButtonDown(Buttons.RightShoulder)) && !(move && 
+                (keyboardState.IsKeyDown(Keys.Up) || keyboardState.IsKeyDown(Keys.W) && Index == 1 || gamePadState.IsButtonDown(Buttons.RightTrigger) ||
+                keyboardState.IsKeyDown(Keys.Down) || keyboardState.IsKeyDown(Keys.S) && Index == 1 || gamePadState.IsButtonDown(Buttons.LeftTrigger) ||
+                keyboardState.IsKeyDown(Keys.Left) || keyboardState.IsKeyDown(Keys.A) && Index == 1 || gamePadState.IsButtonDown(Buttons.LeftThumbstickLeft) ||
+                keyboardState.IsKeyDown(Keys.Right) || keyboardState.IsKeyDown(Keys.D) && Index == 1 || gamePadState.IsButtonDown(Buttons.LeftThumbstickRight))))
             {
                 speed = defaultSpeed * speedBoost;
             }
@@ -148,28 +161,28 @@ namespace MiniMonoGame
             {
                 speed = defaultSpeed;
             }
-            if (keyboardState.IsKeyDown(Keys.Up) || keyboardState.IsKeyDown(Keys.W) || gamePadState.IsButtonDown(Buttons.RightTrigger))
+            if (keyboardState.IsKeyDown(Keys.Up) || keyboardState.IsKeyDown(Keys.W) && Index == 1 || gamePadState.IsButtonDown(Buttons.RightTrigger))
             {
                 Position += speed * deltaTime * forwardDirection;
                 move = false;
             }
-            if (keyboardState.IsKeyDown(Keys.Down) || keyboardState.IsKeyDown(Keys.S) || gamePadState.IsButtonDown(Buttons.LeftTrigger))
+            if (keyboardState.IsKeyDown(Keys.Down) || keyboardState.IsKeyDown(Keys.S) && Index == 1 || gamePadState.IsButtonDown(Buttons.LeftTrigger))
             {
                 Position -= speed * deltaTime * forwardDirection;
                 move = false;
             }
-            if (keyboardState.IsKeyDown(Keys.Left) || keyboardState.IsKeyDown(Keys.A) || gamePadState.IsButtonDown(Buttons.LeftThumbstickLeft))
+            if (keyboardState.IsKeyDown(Keys.Left) || keyboardState.IsKeyDown(Keys.A) && Index == 1 || gamePadState.IsButtonDown(Buttons.LeftThumbstickLeft))
             {
                 Position -= speed * deltaTime * rightDirection;
                 move = false;
             }
-            if (keyboardState.IsKeyDown(Keys.Right) || keyboardState.IsKeyDown(Keys.D) || gamePadState.IsButtonDown(Buttons.LeftThumbstickRight))
+            if (keyboardState.IsKeyDown(Keys.Right) || keyboardState.IsKeyDown(Keys.D) && Index == 1 || gamePadState.IsButtonDown(Buttons.LeftThumbstickRight))
             {
                 Position += speed * deltaTime * rightDirection;
                 move = false;
             }
 
-            if (keyboardState.IsKeyDown(Keys.Q) || gamePadState.IsButtonDown(Buttons.RightThumbstickLeft))
+            if (keyboardState.IsKeyDown(Keys.Q) && Index == 1 || gamePadState.IsButtonDown(Buttons.RightThumbstickLeft))
             {
                 rotation -= rotationSpeed * deltaTime;
                 if (rotation < -2.0f * (float)Math.PI)
@@ -181,7 +194,7 @@ namespace MiniMonoGame
                 forwardDirection = -new Vector2((float)Math.Cos(rotation + (float)Math.PI * 0.5f), (float)Math.Sin(rotation + (float)Math.PI * 0.5f));
                 forwardDirection.Normalize();
             }
-            if (keyboardState.IsKeyDown(Keys.E) || gamePadState.IsButtonDown(Buttons.RightThumbstickRight))
+            if (keyboardState.IsKeyDown(Keys.E) && Index == 1 || gamePadState.IsButtonDown(Buttons.RightThumbstickRight))
             {
                 rotation += rotationSpeed * deltaTime;
                 if (rotation > 2.0f * (float)Math.PI)
@@ -197,16 +210,31 @@ namespace MiniMonoGame
             RestrictToScreen();
 
             //Shoot bullet
-            if (mouseState.LeftButton == ButtonState.Pressed)
+            if (mouseState.LeftButton == ButtonState.Pressed && Index == 0)
             {
                 shootDirection = mouseState.Position.ToVector2() - Position;
                 shootDirection.Normalize();
                 shoot = true;
             }
-            if (keyboardState.IsKeyDown(Keys.Space) || gamePadState.IsButtonDown(Buttons.LeftShoulder))
+            if (keyboardState.IsKeyDown(Keys.Space) && Index == 1 || gamePadState.IsButtonDown(Buttons.LeftShoulder))
             {
                 shootDirection = forwardDirection;
                 shoot = true;
+            }
+
+            //Use Shield
+            if ((keyboardState.IsKeyDown(Keys.LeftControl) && Index == 1 || mouseState.XButton2 == ButtonState.Pressed && Index == 0) && CurrentEnergy > 0.0f)
+            {
+                usingShield = true;
+            }
+            else
+            {
+                usingShield = false;
+            }
+
+            if (usingShield)
+            {
+                CurrentEnergy -= deltaTime;
             }
 
             foreach (IBullet bullet in Bullets)
@@ -225,6 +253,11 @@ namespace MiniMonoGame
 
         public void Draw(SpriteBatch spriteBatch)
         {
+            if (Dead && ExplosionTimer <= 0.0f)
+            {
+                return;
+            }
+
             if (!Dead)
             {
                 spriteBatch.Draw(Texture, Position, null, Color.White, rotation, new Vector2(Texture.Width * 0.5f, Texture.Height * 0.5f), Scale, SpriteEffects.None, 0.0f);
@@ -232,6 +265,11 @@ namespace MiniMonoGame
             else
             {
                 spriteBatch.Draw(explosionTexture, Position, null, Color.White, rotation, new Vector2(Texture.Width * 0.5f, Texture.Height * 0.5f), Scale, SpriteEffects.None, 0.0f);
+            }
+
+            if (usingShield)
+            {
+                spriteBatch.Draw(shieldTexture, Position, null, Color.White, rotation, new Vector2(shieldTexture.Width * 0.5f, shieldTexture.Height * 0.5f), Scale, SpriteEffects.None, 0.0f);
             }
 
             foreach (IBullet bullet in Bullets)
@@ -242,10 +280,13 @@ namespace MiniMonoGame
 
         public void DecreaseHealth(int amount = 1)
         {
-            CurrentHealth -= amount;
-            if (CurrentHealth <= 0)
+            if (!usingShield)
             {
-                Die();
+                CurrentHealth -= amount;
+                if (CurrentHealth <= 0)
+                {
+                    Die();
+                }
             }
         }
 
@@ -255,6 +296,15 @@ namespace MiniMonoGame
             if (CurrentHealth > BaseHealth)
             {
                 CurrentHealth = BaseHealth;
+            }
+        }
+
+        public void IncreaseEnergy(int amount = 1)
+        {
+            CurrentEnergy += amount;
+            if (CurrentEnergy > BaseEnergy)
+            {
+                CurrentEnergy = BaseEnergy;
             }
         }
 
@@ -292,11 +342,16 @@ namespace MiniMonoGame
             forwardDirection = new Vector2(0.0f, -1.0f);
             rightDirection = new Vector2(1.0f, 0.0f);
             CurrentHealth = BaseHealth;
+            CurrentEnergy = BaseEnergy;
             Position = position;
             Dead = false;
             Score = 0;
             ExplosionTimer = 0.5f;
             rotation = 0.0f;
+            foreach (IBullet bullet in Bullets)
+            {
+                bullet.Respawn();
+            }
         }
     }
 }

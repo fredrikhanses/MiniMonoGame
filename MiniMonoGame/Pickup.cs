@@ -3,17 +3,17 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace MiniMonoGame
 {
-    public class HealthDrop : IHealthDrop
+    public class Pickup : IPickup
     {
         public Texture2D Texture { get; private set; }
-        public bool Used { get; private set; }
+        public int Value { get; set; }
+        public bool Used { get; set; }
 
         private Vector2 position;
         private Vector2 scale;
         private Vector2 scaleDirection;
         private float rotation;
         private float rotationSpeed;
-        private int value;
 
         public void Init(Vector2 position, Vector2 scale, float rotation = 0.0f, float rotationSpeed = 1.0f, int value = 1)
         {
@@ -21,13 +21,13 @@ namespace MiniMonoGame
             this.scale = scale;
             this.rotation = rotation;
             this.rotationSpeed = rotationSpeed;
-            this.value = value;
+            Value = value;
             scaleDirection = Vector2.One;
         }
 
         public void LoadContent(Texture2D texture)
         {
-            this.Texture = texture;
+            Texture = texture;
         }
 
         public void Update(float deltaTime)
@@ -38,18 +38,21 @@ namespace MiniMonoGame
             }
 
             rotation += deltaTime * rotationSpeed;
+            if (rotation >= 360.0f)
+            {
+                rotation = 0.0f;
+            }
             scale += scaleDirection * deltaTime * rotationSpeed;
             if (scale.X > (Vector2.One).X || scale.X < (Vector2.One * 0.5f).X)
             {
                 ToggleScaleDirection();
             }
 
-            if (CheckCollision(GAME.Player))
+            foreach (IPlayer player in GAME.Players)
             {
-                if (GAME.Player.CurrentHealth < GAME.Player.BaseHealth)
+                if (CheckCollision(player))
                 {
-                    GAME.Player.IncreaseHealth(value);
-                    Used = true;
+                    ApplyUsage(player);
                 }
             }
         }
@@ -83,6 +86,8 @@ namespace MiniMonoGame
                 Used = true;
             }
         }
+
+        public virtual void ApplyUsage(IPlayer player) { }
 
         private void ToggleScaleDirection()
         {

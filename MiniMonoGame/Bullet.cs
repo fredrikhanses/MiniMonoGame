@@ -45,7 +45,7 @@ namespace MiniMonoGame
 
             if (explode)
             {
-                if (explosionTimer >= 0.0f)
+                if (explosionTimer > 0.0f)
                 {
                     explosionTimer -= deltaTime;
                 }
@@ -104,19 +104,22 @@ namespace MiniMonoGame
                 }
                 else
                 {
-                    if (CheckCollision(GAME.Player))
+                    foreach (IPlayer player in GAME.Players)
                     {
-                        Explode();
-                        GAME.Player.DecreaseHealth(damage);
-                        return;
-                    }
-                    foreach (IBullet bullet in GAME.Player.Bullets)
-                    {
-                        if (bullet.Move && CheckCollision(bullet))
+                        if (!player.Dead && CheckCollision(player))
                         {
                             Explode();
-                            bullet.Explode();
+                            player.DecreaseHealth(damage);
                             return;
+                        }
+                        foreach (IBullet bullet in player.Bullets)
+                        {
+                            if (bullet.Move && CheckCollision(bullet))
+                            {
+                                Explode();
+                                bullet.Explode();
+                                return;
+                            }
                         }
                     }
                 }
